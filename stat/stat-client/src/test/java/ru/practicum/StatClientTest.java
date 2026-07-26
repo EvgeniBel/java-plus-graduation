@@ -5,7 +5,6 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.client.RestClient;
 import ru.practicum.ewm.HitDto;
 import ru.practicum.ewm.StatRequestParamDto;
 import ru.practicum.ewm.StatResponseDto;
@@ -19,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class StatClientTest {
 
     private MockWebServer mockWebServer;
-    private StatClientImpl statClient;
+    private StatClient statClient;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -27,9 +26,13 @@ class StatClientTest {
         mockWebServer.start();
 
         String baseUrl = mockWebServer.url("").toString();
+        // Убираем последний слеш
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
 
-        RestClient.Builder builder = RestClient.builder();
-        statClient = new StatClientImpl(builder, baseUrl);
+        // Используем конструктор с baseUrl
+        statClient = new StatClientImpl(baseUrl);
     }
 
     @AfterEach
@@ -38,7 +41,7 @@ class StatClientTest {
     }
 
     @Test
-    void testPostHitSuccess() {
+    void testPostHitSuccess() throws InterruptedException {
         String responseBody = "{\n" +
                 "    \"id\": 1,\n" +
                 "    \"app\": \"test-app\",\n" +
@@ -48,7 +51,7 @@ class StatClientTest {
                 "}";
 
         mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(201)
+                .setResponseCode(200)
                 .setBody(responseBody)
                 .addHeader("Content-Type", "application/json"));
 
@@ -63,10 +66,15 @@ class StatClientTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("test-app", result.getApp());
+
+        // Проверяем, что запрос был отправлен
+        var request = mockWebServer.takeRequest();
+        assertEquals("POST", request.getMethod());
+        assertEquals("/hit", request.getPath());
     }
 
     @Test
-    void testGetStatsSuccess() {
+    void testGetStatsSuccess() throws InterruptedException {
         String responseBody = "[\n" +
                 "    {\"app\":\"app1\",\"uri\":\"/test1\",\"hits\":5},\n" +
                 "    {\"app\":\"app1\",\"uri\":\"/test2\",\"hits\":3}\n" +
@@ -87,7 +95,13 @@ class StatClientTest {
 
         assertNotNull(results);
         assertEquals(2, results.size());
+        assertEquals("app1", results.get(0).getApp());
         assertEquals(5L, results.get(0).getHits());
+
+        // Проверяем, что запрос был отправлен
+        var request = mockWebServer.takeRequest();
+        assertEquals("GET", request.getMethod());
+        assertTrue(request.getPath().startsWith("/stats"));
     }
 
     @Test

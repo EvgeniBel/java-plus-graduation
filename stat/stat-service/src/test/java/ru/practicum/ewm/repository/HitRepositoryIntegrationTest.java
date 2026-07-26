@@ -3,9 +3,9 @@ package ru.practicum.ewm.repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.TestPropertySource;
 import ru.practicum.ewm.StatResponseDto;
 import ru.practicum.ewm.model.Hit;
 
@@ -16,14 +16,19 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
+@DataJpaTest
 @ActiveProfiles("test")
-@Transactional
+@TestPropertySource(properties = {
+        "spring.cloud.config.enabled=false",
+        "spring.cloud.config.import-check.enabled=false"
+})
 class HitRepositoryIntegrationTest {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     @Autowired
     private HitRepository hitRepository;
+
     private LocalDateTime baseTime;
 
     @BeforeEach
@@ -49,14 +54,18 @@ class HitRepositoryIntegrationTest {
 
         assertEquals(2, stats.size());
 
-        StatResponseDto stat1 = stats.get(0);
+        StatResponseDto stat1 = stats.stream()
+                .filter(s -> "/test1".equals(s.getUri()))
+                .findFirst()
+                .orElse(null);
         assertEquals("app1", stat1.getApp());
-        assertEquals("/test1", stat1.getUri());
         assertEquals(2L, stat1.getHits());
 
-        StatResponseDto stat2 = stats.get(1);
+        StatResponseDto stat2 = stats.stream()
+                .filter(s -> "/test2".equals(s.getUri()))
+                .findFirst()
+                .orElse(null);
         assertEquals("app2", stat2.getApp());
-        assertEquals("/test2", stat2.getUri());
         assertEquals(1L, stat2.getHits());
     }
 

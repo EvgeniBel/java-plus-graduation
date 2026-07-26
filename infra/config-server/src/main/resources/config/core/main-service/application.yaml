@@ -1,0 +1,30 @@
+server:
+  port: 0
+
+spring:
+  sql:
+    init:
+      mode: always
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/ewm-main-service
+    username: ewm
+    password: ewm
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:service-local-db
+    username: h2-ewm-main-service-local
+    password: password
