@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = IpAddressValidator.class)
 public @interface ValidIp {
     String message() default "Неверный формат IP-адреса (IPv4 или IPv6)";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 }

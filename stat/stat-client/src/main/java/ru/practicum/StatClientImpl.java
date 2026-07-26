@@ -25,15 +25,14 @@ public class StatClientImpl implements StatClient {
     private final DiscoveryClient discoveryClient;
     private final RetryTemplate retryTemplate;
     private final String statsServiceId;
-    private final String baseUrl;  // ✅ Добавляем поле для baseUrl
 
+    // Основной конструктор для production
     public StatClientImpl(DiscoveryClient discoveryClient,
                           RetryTemplate retryTemplate,
                           String statsServiceId) {
         this.discoveryClient = discoveryClient;
         this.retryTemplate = retryTemplate;
         this.statsServiceId = statsServiceId;
-        this.baseUrl = null;
         this.restClient = RestClient.builder()
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -44,8 +43,8 @@ public class StatClientImpl implements StatClient {
         this.discoveryClient = null;
         this.retryTemplate = null;
         this.statsServiceId = null;
-        this.baseUrl = baseUrl;
         this.restClient = RestClient.builder()
+                .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
@@ -55,8 +54,8 @@ public class StatClientImpl implements StatClient {
         this.discoveryClient = null;
         this.retryTemplate = null;
         this.statsServiceId = null;
-        this.baseUrl = baseUrl;
         this.restClient = builder
+                .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
@@ -65,9 +64,9 @@ public class StatClientImpl implements StatClient {
         try {
             List<ServiceInstance> instances = discoveryClient.getInstances(statsServiceId);
             if (instances.isEmpty()) {
-                throw new RuntimeException("No instances found for service: " + statsServiceId);
+                throw new StatsServerUnavailable("No instances found for service: " + statsServiceId);
             }
-            return instances.get(0);
+            return instances.getFirst();
         } catch (Exception exception) {
             log.error("Ошибка обнаружения адреса сервиса статистики с id: {}", statsServiceId, exception);
             throw new StatsServerUnavailable(
@@ -79,13 +78,12 @@ public class StatClientImpl implements StatClient {
 
     private URI makeUri(String path) {
         if (discoveryClient != null && retryTemplate != null) {
-            // Для production - через DiscoveryClient
+            // Production - через DiscoveryClient с Retry
             ServiceInstance instance = retryTemplate.execute(context -> getInstance());
             return URI.create("http://" + instance.getHost() + ":" + instance.getPort() + path);
-        } else if (baseUrl != null) {
-            // Для тестов - используем baseUrl
-            String fullUrl = baseUrl + path;
-            return URI.create(fullUrl);
+        } else if (restClient != null && restClient.toString().contains("baseUrl")) {
+            // Fallback для тестов - используем baseUrl из RestClient
+            return URI.create(path);
         } else {
             // Fallback
             return URI.create(path);
@@ -126,7 +124,8 @@ public class StatClientImpl implements StatClient {
                     .uri(fullUri)
                     .accept(APPLICATION_JSON)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<List<StatResponseDto>>() {});
+                    .body(new ParameterizedTypeReference<List<StatResponseDto>>() {
+                    });
         } catch (Exception e) {
             log.error("Неудачная попытка получения данных статистики из сервиса статистики. " +
                     "Параметры запроса: {}", dto, e);

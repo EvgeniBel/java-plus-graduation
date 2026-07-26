@@ -17,6 +17,10 @@ spring:
 server:
   port: 0
 
+stat:
+  service:
+    id: stat-service
+
 eureka:
   client:
     serviceUrl:

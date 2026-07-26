@@ -1,6 +1,6 @@
 package ru.practicum;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +9,6 @@ import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
 @Configuration
-@ConditionalOnClass(DiscoveryClient.class)  // Только если DiscoveryClient доступен
 public class StatClientConfig {
 
     @Bean
@@ -17,18 +16,20 @@ public class StatClientConfig {
         RetryTemplate retryTemplate = new RetryTemplate();
 
         FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
-        fixedBackOffPolicy.setBackOffPeriod(3000L);
+        fixedBackOffPolicy.setBackOffPeriod(3000L); // 3 секунды между попытками
         retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
 
         MaxAttemptsRetryPolicy retryPolicy = new MaxAttemptsRetryPolicy();
-        retryPolicy.setMaxAttempts(3);
+        retryPolicy.setMaxAttempts(3); // 3 попытки
         retryTemplate.setRetryPolicy(retryPolicy);
 
         return retryTemplate;
     }
 
     @Bean
-    public StatClient statClient(DiscoveryClient discoveryClient, RetryTemplate retryTemplate) {
-        return new StatClientImpl(discoveryClient, retryTemplate, "stat-service");
+    public StatClient statClient(DiscoveryClient discoveryClient,
+                                 RetryTemplate retryTemplate,
+                                 @Value("${stat.service.id:stat-service}") String statsServiceId) {
+        return new StatClientImpl(discoveryClient, retryTemplate, statsServiceId);
     }
 }
