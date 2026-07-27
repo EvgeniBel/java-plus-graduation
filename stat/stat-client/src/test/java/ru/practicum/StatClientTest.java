@@ -5,11 +5,15 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClient;
 import ru.practicum.ewm.HitDto;
 import ru.practicum.ewm.StatRequestParamDto;
 import ru.practicum.ewm.StatResponseDto;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,14 +29,16 @@ class StatClientTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
 
-        String baseUrl = mockWebServer.url("").toString();
-        // Убираем последний слеш
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
+        final String baseUrl = mockWebServer.url("").toString();
 
-        // Используем конструктор с baseUrl
-        statClient = new StatClientImpl(baseUrl);
+
+        UriProvider testUriProvider = path -> URI.create(baseUrl + path);
+
+        RestClient restClient = RestClient.builder()
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        statClient = new StatClientImpl(restClient, testUriProvider);
     }
 
     @AfterEach
@@ -67,7 +73,6 @@ class StatClientTest {
         assertEquals(1L, result.getId());
         assertEquals("test-app", result.getApp());
 
-        // Проверяем, что запрос был отправлен
         var request = mockWebServer.takeRequest();
         assertEquals("POST", request.getMethod());
         assertEquals("/hit", request.getPath());
@@ -98,7 +103,6 @@ class StatClientTest {
         assertEquals("app1", results.get(0).getApp());
         assertEquals(5L, results.get(0).getHits());
 
-        // Проверяем, что запрос был отправлен
         var request = mockWebServer.takeRequest();
         assertEquals("GET", request.getMethod());
         assertTrue(request.getPath().startsWith("/stats"));
