@@ -3,22 +3,31 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: true
+          enabled: false  # Отключаем автоматическое обнаружение
       routes:
+        # Main Service - все маршруты напрямую
         - id: main_service_route
           uri: lb://MAIN-SERVICE
           predicates:
-            - Path=/api/v1/**
+            - Path=/admin/**, /users/**, /public/**, /compilations/**, /events/**, /categories/**
           filters:
-            - StripPrefix=2
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,PATCH,DELETE
 
+        # Stats Server
         - id: stats_service_route
           uri: lb://STATS-SERVER
           predicates:
-            - Path=/stats-server/**
+            - Path=/hit, /stats/**
           filters:
-            - PrefixPath=/api/v1
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                methods: GET,POST
 
 eureka:
   client:
@@ -33,10 +42,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health, gateway, info
       base-path: /actuator
   endpoint:
     gateway:
       enabled: true
     health:
       show-details: always
+
+server:
+  port: 8080
