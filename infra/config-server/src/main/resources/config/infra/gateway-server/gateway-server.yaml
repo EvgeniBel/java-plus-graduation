@@ -3,13 +3,12 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: false  # Отключаем автоматическое обнаружение
+          enabled: false
       routes:
-        # Main Service - все маршруты напрямую
         - id: main_service_route
           uri: lb://MAIN-SERVICE
           predicates:
-            - Path=/admin/**, /users/**, /public/**, /compilations/**, /events/**, /categories/**
+            - Path=/admin/**,/users/**,/public/**,/compilations/**,/events/**,/categories/**
           filters:
             - name: Retry
               args:
@@ -17,11 +16,10 @@ spring:
                 statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
                 methods: GET,POST,PUT,PATCH,DELETE
 
-        # Stats Server
         - id: stats_service_route
           uri: lb://STATS-SERVER
           predicates:
-            - Path=/hit, /stats/**
+            - Path=/hit,/stats/**
           filters:
             - name: Retry
               args:
@@ -29,14 +27,19 @@ spring:
                 statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
                 methods: GET,POST
 
+server:
+  port: 8080
+
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+    enabled: true
     register-with-eureka: true
     fetch-registry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+    instance-id: "${spring.application.name}:${random.value}"
 
 management:
   endpoints:
@@ -49,6 +52,3 @@ management:
       enabled: true
     health:
       show-details: always
-
-server:
-  port: 8080

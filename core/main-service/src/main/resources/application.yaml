@@ -13,20 +13,3 @@ spring:
         max-attempts: 6
         initial-interval: 1000
         multiplier: 1.1
-
-server:
-  port: 0
-
-stat:
-  service:
-    id: stats-server
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: "${spring.application.name}:${random.value}"
