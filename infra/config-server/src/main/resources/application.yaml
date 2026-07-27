@@ -11,7 +11,7 @@ spring:
       server:
         native:
           searchLocations:
-            - classpath:config/stats/stats-service
+            - classpath:config/stats/stats-server
             - classpath:config/core/main-service
             - classpath:config/infra/gateway
 

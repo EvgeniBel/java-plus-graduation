@@ -1,3 +1,5 @@
+server:
+  port: 8080
 cloud:
   gateway:
     discovery:
@@ -13,9 +15,9 @@ cloud:
           - StripPrefix=1
 
       - id: stats_service_route
-        uri: lb://STATS-SERVICE
+        uri: lb://STATS-SERVER
         predicates:
-          - Path=/stats-service/**
+          - Path=/stats-server/**
         filters:
           - PrefixPath=/api/v1
 
