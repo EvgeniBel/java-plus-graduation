@@ -15,8 +15,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - ewm-network
+    restart: unless-stopped
 
   postgres-stats:
     image: postgres:15
@@ -34,30 +33,84 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - ewm-network
+    restart: unless-stopped
 
-  discovery-server:
-    build:
-      context: ./infra/discovery-server
-      dockerfile: Dockerfile
-    container_name: discovery-server
-    ports:
-      - "8761:8761"
+  postgres-event:
+    image: postgres:15
+    container_name: postgres-event
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-    networks:
-      - ewm-network
+      POSTGRES_DB: ewm-event-service
+      POSTGRES_USER: postgres-ewm-event-service
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-event-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-event-service -d ewm-event-service"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-networks:
-  ewm-network:
-    driver: bridge
+  postgres-comment:
+    image: postgres:15
+    container_name: postgres-comment
+    environment:
+      POSTGRES_DB: ewm-comment-service
+      POSTGRES_USER: postgres-ewm-comment-service
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-comment-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-comment-service -d ewm-comment-service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-request:
+    image: postgres:15
+    container_name: postgres-request
+    environment:
+      POSTGRES_DB: ewm-request-service
+      POSTGRES_USER: postgres-ewm-request-service
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres-request-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-request-service -d ewm-request-service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-user:
+    image: postgres:15
+    container_name: postgres-user
+    environment:
+      POSTGRES_DB: ewm-user-service
+      POSTGRES_USER: postgres-ewm-user-service
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-user-service -d ewm-user-service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres-main-data:
   postgres-stats-data:
+  postgres-event-data:
+  postgres-comment-data:
+  postgres-request-data:
+  postgres-user-data:
