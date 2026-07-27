@@ -1,16 +1,5 @@
 services:
-  stats-server:
-    build: stats/stats-server
-    container_name: stats-server
-    ports:
-      - "9090:9090"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats-server
-      - SPRING_DATASOURCE_USERNAME=postgres-ewm-stats-server
-      - SPRING_DATASOURCE_PASSWORD=password
-    depends_on:
-      stats-db:
-        condition: service_healthy
+  # ==================== Базы данных ====================
 
   stats-db:
     image: postgres:16.1
@@ -26,22 +15,8 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
-
-  ewm-service:
-    build: main-service
-    container_name: main-service
-    ports:
-      - "8080:8080"
-    environment:
-      - CLIENT_URL=http://stats-server:9090
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main-service
-      - SPRING_DATASOURCE_USERNAME=ewm
-      - SPRING_DATASOURCE_PASSWORD=ewm
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-      stats-server:
-        condition: service_started
+    networks:
+      - ewm-network
 
   ewm-db:
     image: postgres:16.1
@@ -57,3 +32,103 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
+    networks:
+      - ewm-network
+
+  # ==================== Инфраструктура ====================
+
+  discovery-server:
+    build: infra/discovery-server
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_INSTANCE_HOSTNAME=discovery-server
+    networks:
+      - ewm-network
+
+  config-server:
+    build: infra/config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=native,docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCHLOCATIONS=classpath:config/core/{application},classpath:config/infra/{application},classpath:config/stats/{application}
+    depends_on:
+      - discovery-server
+    networks:
+      - ewm-network
+
+  gateway-server:
+    build: infra/gateway-server
+    container_name: gateway-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_DISCOVERY_SERVICEID=config-server
+    depends_on:
+      - discovery-server
+      - config-server
+    networks:
+      - ewm-network
+
+  # ==================== Сервисы ====================
+
+  stats-server:
+    build: stat/stats-server
+    container_name: stats-server
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats-server
+      - SPRING_DATASOURCE_USERNAME=postgres-ewm-stats-server
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_DISCOVERY_SERVICEID=config-server
+    depends_on:
+      stats-db:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    networks:
+      - ewm-network
+
+  main-service:
+    build: core/main-service
+    container_name: main-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main-service
+      - SPRING_DATASOURCE_USERNAME=ewm
+      - SPRING_DATASOURCE_PASSWORD=ewm
+      - STAT_SERVICE_ID=stats-server
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_DISCOVERY_SERVICEID=config-server
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+      stats-server:
+        condition: service_started
+    networks:
+      - ewm-network
+
+networks:
+  ewm-network:
+    driver: bridge

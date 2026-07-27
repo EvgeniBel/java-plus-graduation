@@ -11,9 +11,9 @@ spring:
       server:
         native:
           searchLocations:
-            - classpath:config/stats/stats-server
-            - classpath:config/core/main-service
-            - classpath:config/infra/gateway
+            - classpath:config/core/{application}
+            - classpath:config/infra/{application}
+            - classpath:config/stats/{application}
 
 eureka:
   client:
