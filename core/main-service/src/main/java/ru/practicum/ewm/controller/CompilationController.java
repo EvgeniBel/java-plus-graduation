@@ -20,7 +20,6 @@ public class CompilationController {
     private final CompilationService service;
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<CompilationDto> getCompilations(
             @RequestParam(required = false) Boolean pinned,
             @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
@@ -35,7 +34,6 @@ public class CompilationController {
     }
 
     @GetMapping("/{compId}")
-    @ResponseStatus(HttpStatus.OK)
     public CompilationDto getCompilationById(
             @PathVariable Long compId
     ) {

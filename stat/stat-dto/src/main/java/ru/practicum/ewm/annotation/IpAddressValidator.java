@@ -17,5 +17,4 @@ public class IpAddressValidator implements ConstraintValidator<ValidIp, String> 
             return false;
         }
     }
-
 }

@@ -1,9 +1,11 @@
 package ru.practicum.ewm.model;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
@@ -12,20 +14,21 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "hits")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Hit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "app", nullable = false)
-    private String app;
+    String app;
 
     @Column(name = "uri", nullable = false)
-    private String uri;
+    String uri;
 
     @Column(name = "ip", nullable = false)
-    private String ip;
+    String ip;
 
     @Column(name = "timestamp", nullable = false)
-    private LocalDateTime timestamp;
+    LocalDateTime timestamp;
 }

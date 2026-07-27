@@ -66,9 +66,6 @@ public class EventAdminController {
         return eventService.patchEventByIdByAdmin(eventId, dto);
     }
 
-    /**
-     * Фильтрует список ID, оставляя только положительные ( > 0 )
-     */
     private List<Long> filterValidIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return null;

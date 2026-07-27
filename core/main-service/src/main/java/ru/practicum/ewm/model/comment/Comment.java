@@ -10,13 +10,13 @@ import ru.practicum.ewm.model.event.Event;
 
 import java.time.LocalDateTime;
 
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "comments")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Comment {
 
     @Id

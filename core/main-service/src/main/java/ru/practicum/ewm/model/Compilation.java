@@ -2,6 +2,7 @@ package ru.practicum.ewm.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.model.event.Event;
 
 import java.util.List;
@@ -13,12 +14,12 @@ import java.util.List;
 @Table(name = "compilation")
 @AllArgsConstructor
 @NoArgsConstructor
-// Подборка событий
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Compilation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -26,12 +27,12 @@ public class Compilation {
             joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
-    private List<Event> events;
+    List<Event> events;
 
     @Column(name = "pinned")
-    private Boolean pinned;
+    Boolean pinned;
 
     @Column(name = "title")
-    private String title;
+    String title;
 
 }

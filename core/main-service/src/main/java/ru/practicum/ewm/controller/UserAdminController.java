@@ -32,7 +32,6 @@ public class UserAdminController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<UserDto> getUsers(
             @RequestParam(required = false)
             @Size(max = 100, message = "Не более 100 ID")  // ограничение на количество

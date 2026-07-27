@@ -34,7 +34,6 @@ public class RequestPrivateController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getRequestByUserId(
             @PositiveOrZero @PathVariable("userId") Long userId
     ) {
@@ -43,7 +42,6 @@ public class RequestPrivateController {
     }
 
     @PatchMapping("/{requestId}/cancel")
-    @ResponseStatus(HttpStatus.OK)
     public ParticipationRequestDto canceledRequest(
             @PositiveOrZero @PathVariable("requestId") Long requestId,
             @PathVariable("userId") Long userId

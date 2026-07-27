@@ -1,12 +1,12 @@
 package ru.practicum.ewm.error;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.http.HttpStatus;
 
-@RequiredArgsConstructor
+@Value
 public class ApiError {
-    private final HttpStatus status;
-    private final String description;
-    private final String error;
-    private final String stackTrace;
+    HttpStatus status;
+    String description;
+    String error;
+    String stackTrace;
 }

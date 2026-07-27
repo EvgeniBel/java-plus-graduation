@@ -52,5 +52,4 @@ public class CompilationAdminController {
             @PositiveOrZero @PathVariable Long compId) {
         service.removeCompilation(compId);
     }
-
 }

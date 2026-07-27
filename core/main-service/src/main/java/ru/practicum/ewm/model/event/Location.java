@@ -2,6 +2,7 @@ package ru.practicum.ewm.model.event;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -10,18 +11,19 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "locations")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Location {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "lat", nullable = false)
-    private Double lat;
+    Double lat;
 
     @Column(name = "lon", nullable = false)
-    private Double lon;
+    Double lon;
 
     @OneToOne(mappedBy = "location")
-    private Event event;
+    Event event;
 }

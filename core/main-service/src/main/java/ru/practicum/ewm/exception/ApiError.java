@@ -1,22 +1,25 @@
 package ru.practicum.ewm.exception;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApiError {
     @Builder.Default
-    private List<String> errors = List.of();
-    private String message;
-    private String reason;
-    private String status;
+    List<String> errors = List.of();
+    String message;
+    String reason;
+    String status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Builder.Default
-    private LocalDateTime timestamp = LocalDateTime.now();
+    LocalDateTime timestamp = LocalDateTime.now();
 }

@@ -1,9 +1,11 @@
 package ru.practicum.ewm.model;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.model.event.Event;
 
 import java.util.List;
@@ -13,16 +15,16 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "categories")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "name", nullable = false, unique = true, length = 50)
-    private String name;
+    String name;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    private List<Event> events;
-
+    List<Event> events;
 }

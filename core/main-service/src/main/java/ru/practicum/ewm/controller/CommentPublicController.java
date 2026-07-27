@@ -20,7 +20,6 @@ public class CommentPublicController {
     private final CommentService commentService;
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public Page<CommentResponseDto> getApprovedCommentsByEvent(
             @PathVariable Long eventId,
             @RequestParam(required = false) String status,

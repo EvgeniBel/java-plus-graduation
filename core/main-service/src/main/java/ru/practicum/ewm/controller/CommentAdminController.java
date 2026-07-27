@@ -26,7 +26,6 @@ public class CommentAdminController {
     private final CommentService commentService;
 
     @PatchMapping("{commentId}/status")
-    @ResponseStatus(HttpStatus.OK)
     public CommentResponseDto updateCommentStatus(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentStatusUpdateRequest request
@@ -36,7 +35,6 @@ public class CommentAdminController {
     }
 
     @GetMapping("/events/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public Page<CommentResponseDto> getCommentsByEvent(
             @PathVariable Long eventId,
             @RequestParam(required = false) String status,

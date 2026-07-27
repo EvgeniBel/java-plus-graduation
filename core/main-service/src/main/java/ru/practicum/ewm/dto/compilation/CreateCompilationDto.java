@@ -2,10 +2,8 @@ package ru.practicum.ewm.dto.compilation;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
@@ -13,12 +11,13 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateCompilationDto {
 
-    private List<Long> events;
-    private Boolean pinned;
+    List<Long> events;
+    Boolean pinned;
     @NotBlank
     @Size(max = 50, message = "Длина названия подборки должна быть не более 50 символов")
-    private String title;
+    String title;
 
 }

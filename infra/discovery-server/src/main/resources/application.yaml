@@ -1,6 +1,9 @@
 spring:
   application:
     name: discovery-server
+  cloud:
+    config:
+      enabled: false
 
 server:
   port: 8761
