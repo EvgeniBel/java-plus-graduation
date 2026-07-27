@@ -32,9 +32,9 @@ public class EventAdminController {
             @RequestParam(required = false) String rangeStart,
             @RequestParam(required = false) String rangeEnd,
             @RequestParam(defaultValue = "0")
-                @PositiveOrZero Integer from,
+            @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10")
-                @Positive Integer size
+            @Positive Integer size
     ) {
         log.info("Уровень Admin. Получение списка из {} событий по необходимым параметрам. " +
                 "Пропускаем {} элементов. ", size, from);
@@ -57,10 +57,10 @@ public class EventAdminController {
     @PatchMapping("/{eventId}")
     public EventFullDto patchEventByIdByAdmin(
             @PathVariable
-                @Positive Long eventId,
+            @Positive Long eventId,
             @RequestBody
-                @NotNull(message = "Уровень Admin. Данные для обновления события не могут быть null")
-                @Valid UpdateEventAdminRequest dto
+            @NotNull(message = "Уровень Admin. Данные для обновления события не могут быть null")
+            @Valid UpdateEventAdminRequest dto
     ) {
         log.info("Уровень Admin. Обновление администратором данных события с ID: {}. ", eventId);
         return eventService.patchEventByIdByAdmin(eventId, dto);

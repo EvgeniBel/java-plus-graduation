@@ -1,4 +1,5 @@
 package ru.practicum.ewm.controller;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +24,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @WebMvcTest(controllers = EventPrivateController.class)
 class EventPrivateControllerTest {
 
     @MockBean
     EventService eventService;
-
-    @Autowired
-    private MockMvc mvc;
-
     @Autowired
     ObjectMapper mapper;
-
-    LocationDto location = new LocationDto(33.56,76.87);
+    LocationDto location = new LocationDto(33.56, 76.87);
     CategoryDto category = new CategoryDto(3L, "Цирк");
     UserShortDto initiator = new UserShortDto(1L, "Коля");
-
     NewEventDto newEventDto = NewEventDto.builder()
             .annotation("новое очень интересное событие")
             .category(3L)
@@ -50,7 +46,6 @@ class EventPrivateControllerTest {
             .requestModeration(true)
             .title("летающие слоны")
             .build();
-
     EventFullDto fullDtoForResponse = EventFullDto.builder()
             .annotation("новое очень интересное событие")
             .category(category)
@@ -69,6 +64,8 @@ class EventPrivateControllerTest {
             .title("летающие слоны")
             .views(567L)
             .build();
+    @Autowired
+    private MockMvc mvc;
 
     @Test
     void testAddEvent() throws Exception {
@@ -76,10 +73,10 @@ class EventPrivateControllerTest {
                 .thenReturn(fullDtoForResponse);
 
         mvc.perform(post("/users/1/events")
-                    .content(mapper.writeValueAsString(newEventDto))
-                    .characterEncoding(StandardCharsets.UTF_8)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(newEventDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.annotation", is(fullDtoForResponse.getAnnotation())))
                 .andExpect(jsonPath("$.category.id",

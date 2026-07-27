@@ -11,15 +11,15 @@ import java.util.TimeZone;
 @ComponentScan(basePackages = {"ru.practicum.ewm", "ru.practicum"})
 public class ServiceApplication {
 
-    @PostConstruct
-    public void init() {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    }
-
     public static void main(String[] args) {
 
         SpringApplication.run(ServiceApplication.class, args);
 
+    }
+
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
 }

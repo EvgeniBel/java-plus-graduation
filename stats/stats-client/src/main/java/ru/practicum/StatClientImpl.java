@@ -2,8 +2,6 @@ package ru.practicum;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.ewm.HitDto;
@@ -60,7 +58,8 @@ public class StatClientImpl implements StatClient {
                     .uri(fullUri)
                     .accept(APPLICATION_JSON)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<List<StatResponseDto>>() {});
+                    .body(new ParameterizedTypeReference<List<StatResponseDto>>() {
+                    });
         } catch (Exception e) {
             log.error("Неудачная попытка получения данных статистики из сервиса статистики. " +
                     "Параметры запроса: {}", dto, e);

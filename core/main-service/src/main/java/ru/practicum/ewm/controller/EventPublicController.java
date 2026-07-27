@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
 import ru.practicum.ewm.HitDto;
 import ru.practicum.ewm.constants.Constants;
-import ru.practicum.ewm.dto.event.*;
+import ru.practicum.ewm.dto.event.EventFullDto;
+import ru.practicum.ewm.dto.event.EventShortDto;
+import ru.practicum.ewm.dto.event.PublicEventRequestParam;
 import ru.practicum.ewm.service.EventService;
 
 import java.time.LocalDateTime;
@@ -34,14 +36,14 @@ public class EventPublicController {
             @RequestParam(required = false) String rangeStart,
             @RequestParam(required = false) String rangeEnd,
             @RequestParam(defaultValue = "false")
-                Boolean onlyAvailable,
+            Boolean onlyAvailable,
             @RequestParam(required = false)
-                @Pattern(regexp = "EVENT_DATE|VIEWS", message = "Сортировка возможная только по EVENT_DATE или VIEWS.")
-                String sort,
+            @Pattern(regexp = "EVENT_DATE|VIEWS", message = "Сортировка возможная только по EVENT_DATE или VIEWS.")
+            String sort,
             @RequestParam(defaultValue = "0")
-                @PositiveOrZero Integer from,
+            @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10")
-                @Positive Integer size,
+            @Positive Integer size,
             HttpServletRequest request
     ) {
         log.info("Уровень Public. Получение списка из {} событий по необходимым параметрам. " +
@@ -75,7 +77,7 @@ public class EventPublicController {
             @PathVariable @Positive Long eventId,
             HttpServletRequest request
     ) {
-        log.info("Уровень Public. Получение данных о событии с ID: {}. ",eventId);
+        log.info("Уровень Public. Получение данных о событии с ID: {}. ", eventId);
         HitDto hitDto = HitDto.builder()
                 .app("ewm-main-service")
                 .uri(request.getRequestURI())

@@ -87,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
                 || oldComment.getStatus().equals(CommentStatus.PENDING))
                 && createdAt.isBefore(now.minusHours(24L))) {
             log.error("Обновление комментария. C момента публикации комментария с ID: {} прошло более 24 часов. " +
-                    "Создание: {}. Попытка изменения: {}. Редактирование невозможно.",
+                            "Создание: {}. Попытка изменения: {}. Редактирование невозможно.",
                     oldComment.getId(), createdAt.format(Constants.FORMATTER), now.format(Constants.FORMATTER));
             throw new ValidationException("Обновление комментария. " +
                     "C момента публикации комментария прошло более 24 часов. Редактирование невозможно.");
