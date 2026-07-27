@@ -6,27 +6,27 @@
 
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>stat</artifactId>
+        <artifactId>stats</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>stat-service</artifactId>
+    <artifactId>stats-service</artifactId>
     <packaging>jar</packaging>
 
-    <name>Stat Service</name>
+    <name>Stats Service</name>
     <description>Statistics service for Explore With Me</description>
 
     <dependencies>
         <!-- Внутренние зависимости -->
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>stat-dto</artifactId>
+            <artifactId>stats-dto</artifactId>
         </dependency>
 
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>stat-client</artifactId>
+            <artifactId>stats-client</artifactId>
         </dependency>
 
         <!-- Spring Boot Starters -->

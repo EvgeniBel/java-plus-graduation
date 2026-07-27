@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="StatApplicationLocal" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="ru.practicum.ewm.StatApplication" />
-    <module name="stat-service" />
+    <module name="stats-service" />
     <option name="VM_PARAMETERS" value="-Dspring.profiles.active=local" />
     <extension name="coverage">
       <pattern>

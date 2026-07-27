@@ -5,12 +5,12 @@
 
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>stat</artifactId>
+        <artifactId>stats</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>stat-client</artifactId>
+    <artifactId>stats-client</artifactId>
     <name>Stat Client</name>
     <description>Client for statistics service with Discovery support</description>
 
@@ -18,7 +18,7 @@
         <!-- Внутренние зависимости -->
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>stat-dto</artifactId>
+            <artifactId>stats-dto</artifactId>
         </dependency>
 
         <!-- Spring Boot Starters -->

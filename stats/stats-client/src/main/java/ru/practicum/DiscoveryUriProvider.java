@@ -16,7 +16,7 @@ public class DiscoveryUriProvider implements UriProvider {
     private final DiscoveryClient discoveryClient;
     private final RetryTemplate retryTemplate;
 
-    @Value("${stat.service.id:stat-service}")
+    @Value("${stat.service.id:stats-service}")
     private final String statsServiceId;
 
     private ServiceInstance getInstance() {

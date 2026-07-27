@@ -19,7 +19,7 @@ server:
 
 stat:
   service:
-    id: stat-service
+    id: stats-service
 
 eureka:
   client:

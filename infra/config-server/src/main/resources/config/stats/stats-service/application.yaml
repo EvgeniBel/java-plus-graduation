@@ -9,8 +9,8 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5434/ewm-stat-service
-    username: postgres-ewm-stat-service
+    url: jdbc:postgresql://localhost:5434/ewm-stats-service
+    username: postgres-ewm-stats-service
     password: password
 
   jpa:
@@ -35,6 +35,6 @@ spring:
 
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:stat-local-db
-    username: h2-ewm-stat-service-local
+    url: jdbc:h2:mem:stats-local-db
+    username: h2-ewm-stats-service-local
     password: password

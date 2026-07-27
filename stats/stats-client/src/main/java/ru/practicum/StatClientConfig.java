@@ -41,7 +41,7 @@ public class StatClientConfig {
     @Primary
     public UriProvider discoveryUriProvider(DiscoveryClient discoveryClient,
                                             RetryTemplate retryTemplate,
-                                            @Value("${stat.service.id:stat-service}") String statsServiceId) {  // ✅ Добавлено
+                                            @Value("${stat.service.id:stats-service}") String statsServiceId) {  // ✅ Добавлено
         return new DiscoveryUriProvider(discoveryClient, retryTemplate, statsServiceId);
     }
 

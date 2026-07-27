@@ -12,10 +12,10 @@ cloud:
         filters:
           - StripPrefix=1
 
-      - id: stat_service_route
-        uri: lb://STAT-SERVICE
+      - id: stats_service_route
+        uri: lb://STATS-SERVICE
         predicates:
-          - Path=/stat-service/**
+          - Path=/stats-service/**
         filters:
           - PrefixPath=/api/v1
 
