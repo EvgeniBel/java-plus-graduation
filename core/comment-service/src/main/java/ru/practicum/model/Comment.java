@@ -5,8 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import ru.practicum.ewm.model.User;
-import ru.practicum.ewm.model.event.Event;
 
 import java.time.LocalDateTime;
 
@@ -38,12 +36,9 @@ public class Comment {
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
-    // Связи (для получения данных из связанных таблиц)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    User author;
+    @Column(name = "user_id", nullable = false)
+    Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    Event event;
+    @Column(name = "event_id", nullable = false)
+    Long eventId;
 }

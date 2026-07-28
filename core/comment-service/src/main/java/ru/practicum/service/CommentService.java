@@ -2,10 +2,10 @@ package ru.practicum.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.ewm.dto.comment.CommentResponseDto;
-import ru.practicum.ewm.dto.comment.CommentStatusUpdateRequest;
-import ru.practicum.ewm.dto.comment.NewCommentDto;
-import ru.practicum.ewm.dto.comment.UpdateCommentUserRequest;
+import ru.practicum.dto.comment.CommentResponseDto;
+import ru.practicum.dto.comment.CommentStatusUpdateRequest;
+import ru.practicum.dto.comment.NewCommentDto;
+import ru.practicum.dto.comment.UpdateCommentUserRequest;
 
 public interface CommentService {
     Page<CommentResponseDto> getApprovedCommentsByEvent(Long eventId, Pageable pageable);

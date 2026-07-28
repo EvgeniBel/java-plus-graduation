@@ -7,8 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.comment.CommentResponseDto;
-import ru.practicum.ewm.service.CommentService;
+import ru.practicum.dto.comment.CommentResponseDto;
+import ru.practicum.service.CommentService;
+
 
 @Slf4j
 @RestController

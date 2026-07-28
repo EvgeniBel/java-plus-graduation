@@ -11,11 +11,6 @@ public final class Constants {
 
     // ==================== СТАТУСЫ (константы для бизнес-логики) ====================
 
-    // Статусы комментариев
-    public static final String COMMENT_STATUS_PENDING = "PENDING";
-    public static final String COMMENT_STATUS_APPROVED = "APPROVED";
-    public static final String COMMENT_STATUS_REJECTED = "REJECTED";
-
     // Статусы событий
     public static final String EVENT_STATUS_PENDING = "PENDING";
     public static final String EVENT_STATUS_PUBLISHED = "PUBLISHED";
