@@ -4,7 +4,7 @@
     <module name="stats-server" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="ru.practicum.ewm.service.*" />
+        <option name="PATTERN" value="ru.practicum.service.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
