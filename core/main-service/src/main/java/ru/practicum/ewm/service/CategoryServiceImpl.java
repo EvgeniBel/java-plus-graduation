@@ -94,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Получение категории с id: {}", id);
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Category с id=%s не найден", id)));
+                .orElseThrow(() -> new NotFoundException(String.format("Category с id=%d не найден", id)));
 
         return CategoryMapper.toCategoryDto(category);
     }

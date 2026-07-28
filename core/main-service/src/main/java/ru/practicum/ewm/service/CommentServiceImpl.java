@@ -146,7 +146,7 @@ public class CommentServiceImpl implements CommentService {
         log.info("Admin: изменить статус комментария с id={} на status - {}", commentId, request.getStatus());
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID=%s не найден", commentId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID=%d не найден", commentId)));
 
         CommentStatus newStatus;
         try {
