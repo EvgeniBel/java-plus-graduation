@@ -108,7 +108,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Удаление подборки с id: {}", compId);
 
         if (!compilationRepository.existsById(compId)) {
-            throw new NotFoundException("Подборка с id=" + compId + " не найдена");
+            throw new NotFoundException(String.format("Подборка с id=%s не найдена", compId));
         }
         compilationRepository.deleteById(compId);
     }
@@ -161,7 +161,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Получение подборки по id: {}", compId);
 
         Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Подборка с id=" + compId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException(String.format("Подборка с id=%s не найдена", compId)));
 
         List<Long> eventIds = compilation.getEvents().stream()
                 .map(Event::getId)

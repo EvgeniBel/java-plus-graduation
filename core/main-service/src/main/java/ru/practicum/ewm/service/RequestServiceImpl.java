@@ -59,7 +59,7 @@ public class RequestServiceImpl implements RequestService {
         if (existingRequest.isPresent()) {
             log.error("Запрос пользователя {} на событие {} уже существует",
                     requester.getId(), event.getId());
-            throw new ConflictException(String.format("Запрос пользователя c id=%d на событие c id=%d уже существует",
+            throw new ConflictException(String.format("Запрос пользователя c id=%s на событие c id=%s уже существует",
                     requester.getId(), event.getId()));
         }
 
@@ -70,7 +70,7 @@ public class RequestServiceImpl implements RequestService {
         if (event.getParticipantLimit() > 0 && approvedRequestsCount >= event.getParticipantLimit()) {
             log.error("Достигнут лимит участников для event {}. Limit: {}, CONFIRMED: {}",
                     event.getId(), event.getParticipantLimit(), approvedRequestsCount);
-            throw new ConflictException(String.format("Достигнут лимит участников. Limit=%d, Approved=%d",
+            throw new ConflictException(String.format("Достигнут лимит участников. Limit=%s, Approved=%s",
                     event.getParticipantLimit(), approvedRequestsCount));
         }
         //Определение статуса запроса
@@ -131,21 +131,18 @@ public class RequestServiceImpl implements RequestService {
     //Получение пользователя
     private User findUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("User with id " + userId + " not found")
-        );
+                () -> new NotFoundException(String.format("User with id =%s not found", userId)));
     }
 
     //Получение события
     private Event findEvent(Long eventId) {
         return eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException("Event with id " + eventId + " not found")
-        );
+                () -> new NotFoundException(String.format("Event with id=%s not found", eventId)));
     }
 
     //Получение запроса
     private ParticipationRequest findParticipationRequest(Long requestId) {
         return requestRepository.findById(requestId).orElseThrow(
-                () -> new NotFoundException("Request with id " + requestId + " not found")
-        );
+                () -> new NotFoundException(String.format("Request with id=%s not found", requestId)));
     }
 }

@@ -37,10 +37,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponseDto addComment(Long userId, Long eventId, NewCommentDto dto) {
         User author = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(
-                "Добавление комментария. Пользователь с ID: " + userId + " не найден."));
+                String.format("Добавление комментария. Пользователь с ID:%s не найден.", userId)));
 
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Добавление комментария. Событие с ID: " + eventId + " не найдено."));
+                String.format("Добавление комментария. Событие с ID:%s не найдено.", eventId)));
 
         Comment newComment = CommentMapper.dtoToComment(
                 dto,
@@ -60,7 +60,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponseDto patchCommentById(UpdateCommentUserRequest dto) {
         Comment oldComment = commentRepository.findById(dto.getId()).orElseThrow(() -> new NotFoundException(
-                "Обновление комментария. Комментарий с ID: " + dto.getId() + " не найден."));
+                String.format("Обновление комментария. Комментарий с ID=%s не найден.", dto.getId())));
 
         if (!oldComment.getAuthor().getId().equals(dto.getUserId())) {
             log.error("Обновление комментария. Переданное ID пользователя не совпадает с ID автора комментария.");
@@ -68,8 +68,8 @@ public class CommentServiceImpl implements CommentService {
                     "Переданное ID пользователя не совпадает с ID автора комментария.");
         } else if (!userRepository.existsById(dto.getUserId())) {
             log.error("Обновление комментария. Пользователь с ID: {} не найден.", dto.getUserId());
-            throw new NotFoundException("Обновление комментария. " +
-                    "Пользователь с ID: " + dto.getUserId() + " не найден.");
+            throw new NotFoundException(
+                    String.format("Обновление комментария. Пользователь с ID=%s не найден.", dto.getUserId()));
         }
 
         if (!oldComment.getEvent().getId().equals(dto.getEventId())) {
@@ -78,7 +78,7 @@ public class CommentServiceImpl implements CommentService {
                     "Переданное ID события не совпадает с ID события комментария.");
         } else if (!eventRepository.existsById(dto.getEventId())) {
             log.error("Обновление комментария. Событие с ID: {} не найдено.", dto.getEventId());
-            throw new NotFoundException("Обновление комментария. Событие с ID: " + dto.getEventId() + " не найдено.");
+            throw new NotFoundException(String.format("Обновление комментария. Событие с ID=%s не найдено.", dto.getEventId()));
         }
 
         LocalDateTime createdAt = oldComment.getCreatedAt();
@@ -105,7 +105,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void removeCommentById(Long userId, Long eventId, Long commentId) {
         Comment removedComment = commentRepository.findById(commentId).orElseThrow(() -> new NotFoundException(
-                "Удаление комментария. Комментарий с ID: " + commentId + " не найден."));
+                String.format("Удаление комментария. Комментарий с ID=%s не найден.", commentId)));
 
         if (!removedComment.getAuthor().getId().equals(userId)) {
             log.error("Удаление комментария. Переданное ID пользователя не совпадает с ID автора комментария.");
@@ -113,8 +113,7 @@ public class CommentServiceImpl implements CommentService {
                     "Переданное ID пользователя не совпадает с ID автора комментария.");
         } else if (!userRepository.existsById(userId)) {
             log.error("Удаление комментария. Пользователь с ID: {} не найден.", userId);
-            throw new NotFoundException("Удаление комментария. " +
-                    "Пользователь с ID: " + userId + " не найден.");
+            throw new NotFoundException(String.format("Удаление комментария. Пользователь с ID=%s не найден.", userId));
         }
 
         if (!removedComment.getEvent().getId().equals(eventId)) {
@@ -123,7 +122,7 @@ public class CommentServiceImpl implements CommentService {
                     "Переданное ID события не совпадает с ID события комментария.");
         } else if (!eventRepository.existsById(eventId)) {
             log.error("Удаление комментария. Событие с ID: {} не найдено.", eventId);
-            throw new NotFoundException("Удаление комментария. Событие с ID: " + eventId + " не найдено.");
+            throw new NotFoundException(String.format("Удаление комментария. Событие с ID=%s не найдено.", eventId));
         }
 
         commentRepository.deleteById(commentId);
@@ -147,18 +146,18 @@ public class CommentServiceImpl implements CommentService {
         log.info("Admin: изменить статус комментария с id={} на status - {}", commentId, request.getStatus());
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID=%d не найден", commentId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID=%s не найден", commentId)));
 
         CommentStatus newStatus;
         try {
             newStatus = CommentStatus.valueOf(request.getStatus().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new CommentException("Недопустимый статус: " + request.getStatus());
+            throw new CommentException(String.format("Недопустимый статус: %s", request.getStatus()));
         }
 
         if (comment.getStatus() == newStatus) {
             throw new CommentException(String.format(
-                    "Комментарий с ID=%d уже имеет статус '%s'", commentId, newStatus));
+                    "Комментарий с ID=%s уже имеет статус '%s'", commentId, newStatus));
         }
 
         comment.setStatus(newStatus);
@@ -175,7 +174,7 @@ public class CommentServiceImpl implements CommentService {
         log.debug("Admin: получить комментарии по событию eventId= {}, status: {}", eventId, status);
 
         if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Событие с ID: " + eventId + " не найдено");
+            throw new NotFoundException(String.format("Событие с ID=%s не найдено", eventId));
         }
 
         if (status != null && !status.isBlank()) {
@@ -199,7 +198,7 @@ public class CommentServiceImpl implements CommentService {
         log.info("Admin: удалить комментарий с id: {}", commentId);
 
         if (!commentRepository.existsById(commentId)) {
-            throw new NotFoundException("Комментарий с ID: " + commentId + " не найден");
+            throw new NotFoundException(String.format("Комментарий с ID=%s не найден", commentId));
         }
 
         commentRepository.deleteById(commentId);

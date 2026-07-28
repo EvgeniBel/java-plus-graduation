@@ -3,7 +3,7 @@ services:
     image: postgres:15
     container_name: postgres-main
     environment:
-      POSTGRES_DB: ewm-main-service
+      POSTGRES_DB: ewm
       POSTGRES_USER: ewm
       POSTGRES_PASSWORD: ewm
     ports:

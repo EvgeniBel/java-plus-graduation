@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
         log.info("Создание пользователя: {}", request);
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new ConflictException("Пользователь с email '" + request.getEmail() + "' уже существует");
+            throw new ConflictException(String.format("Пользователь с email '%s' уже существует", request.getEmail()));
         }
         User user = UserMapper.toEntity(request);
         User savedUser = userRepository.save(user);
@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService {
         log.info("Удаление пользователя с id: {}", userId);
 
         if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+            throw new NotFoundException(String.format("Пользователь с id=%s не найден",  userId));
         }
 
         userRepository.deleteById(userId);
