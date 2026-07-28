@@ -9,9 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.user.NewUserRequest;
-import ru.practicum.ewm.dto.user.UserDto;
-import ru.practicum.ewm.service.UserService;
+import ru.practicum.dto.user.NewUserRequest;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.service.UserService;
+
 
 import java.util.List;
 
@@ -34,8 +35,7 @@ public class UserAdminController {
     @GetMapping
     public List<UserDto> getUsers(
             @RequestParam(required = false)
-            @Size(max = 100, message = "Не более 100 ID")  // ограничение на количество
-            List<@Positive Long> ids,  // валидация каждого элемента списка
+            @Size(max = 100, message = "Не более 100 ID") List<Long> ids,
             @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
             @Positive @RequestParam(defaultValue = "10") Integer size) {
         log.info("GET /admin/users - ids={}, from={}, size={}", ids, from, size);
