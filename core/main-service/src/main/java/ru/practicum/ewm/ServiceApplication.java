@@ -1,0 +1,25 @@
+package ru.practicum.ewm;
+
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+import java.util.TimeZone;
+
+@SpringBootApplication
+@ComponentScan(basePackages = {"ru.practicum.ewm", "ru.practicum"})
+public class ServiceApplication {
+
+    public static void main(String[] args) {
+
+        SpringApplication.run(ServiceApplication.class, args);
+
+    }
+
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
+}
