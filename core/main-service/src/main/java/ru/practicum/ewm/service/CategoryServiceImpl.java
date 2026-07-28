@@ -32,7 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Создание категории: {}", request);
 
         if (categoryRepository.existsByName(request.getName())) {
-            throw new ConflictException("Категория с именем '" + request.getName() + "' уже существует");
+            throw new ConflictException(String.format("Категория с именем '%s' уже существует", request.getName()));
         }
 
         Category category = CategoryMapper.toEntity(request);
@@ -47,11 +47,11 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Обновление категории с id: {}", catId);
 
         Category category = categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException("Категория с id=" + catId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException(String.format("Категория с id=%d не найдена", catId)));
 
         if (!category.getName().equals(categoryDto.getName()) &&
                 categoryRepository.existsByName(categoryDto.getName())) {
-            throw new ConflictException("Категория с именем '" + categoryDto.getName() + "' уже существует");
+            throw new ConflictException(String.format("Категория с именем '%s' уже существует", categoryDto.getName()));
         }
 
         category.setName(categoryDto.getName());
@@ -66,7 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Удаление категории с id: {}", catId);
 
         Category category = categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException("Категория с id=" + catId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException(String.format("Категория с id=%d не найдена", catId)));
 
         boolean hasEvents = eventRepository.existsByCategoryId(catId);
         if (hasEvents) {

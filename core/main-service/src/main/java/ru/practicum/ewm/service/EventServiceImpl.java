@@ -46,10 +46,10 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto addEvent(Long userId, NewEventDto dto) {
         Category category = categoryRepository.findById(dto.getCategory()).orElseThrow(() -> new NotFoundException(
-                "Добавление события. Категория с ID: " + dto.getCategory() + " не найдена."));
+                String.format("Добавление события. Категория с ID=%d не найдена.", dto.getCategory())));
 
         User initiator = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(
-                "Добавление события. Пользователь с ID: " + userId + " не найден."));
+                String.format("Добавление события. Пользователь с ID=%d не найден", userId)));
 
         Location location = locationRepository.save(LocationMapper.dtoToLocation(dto.getLocation()));
 
@@ -115,13 +115,13 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Получения данных о событии. Событие с ID: " + eventId + " не найдено."));
+                String.format("Получения данных о событии. Событие с ID=%d не найдено.", eventId)));
 
         if (!event.getInitiator().getId().equals(userId)) {
             log.error("Получение данных о событии. " +
                     "Пользователь с ID: {} не является инициатором события с ID: {}", userId, eventId);
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID=%d не является инициатором события с ID=%d ", userId, eventId));
         }
 
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(List.of(event));
@@ -157,13 +157,13 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto patchEventById(Long userId, Long eventId, UpdateEventUserRequest dto) {
         Event oldEvent = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Обновление данных события. Событие с ID: " + eventId + " не найдено."));
+                String.format("Обновление данных события. Событие с ID=%d не найдено.", eventId)));
 
         if (!oldEvent.getInitiator().getId().equals(userId)) {
             log.error("Обновление данных события. " +
                     "Пользователь с ID: {} не является инициатором события с ID: {}", userId, eventId);
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID=%d не является инициатором события с ID=%d ", userId, eventId));
         }
 
         if (oldEvent.getState().equals(EventState.PUBLISHED)) {
@@ -188,7 +188,7 @@ public class EventServiceImpl implements EventService {
 
         if (dto.getCategory() != null) {
             Category category = categoryRepository.findById(dto.getCategory()).orElseThrow(() -> new NotFoundException(
-                    "Обновление данных события. Категория с ID: " + dto.getCategory() + " не найдена."));
+                    String.format("Обновление данных события. Категория с ID=%d не найдена.", dto.getCategory())));
 
             oldEvent.setCategory(category);
         }
@@ -243,12 +243,12 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<ParticipationRequestDto> getRequestsOfEvent(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Получение запросов на участие в событии. Событие с ID: " + eventId + " не найдено."));
+                String.format("Получение запросов на участие в событии. Событие с ID=%d не найдено", eventId)));
         if (!event.getInitiator().getId().equals(userId)) {
             log.error("Получение запросов на участие в событии. " +
                     "Пользователь с ID: {} не является инициатором события с ID: {}", userId, eventId);
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID=%d не является инициатором события с ID=%d ", userId, eventId));
         }
 
         List<ParticipationRequest> requests = requestRepository.findAllByEvent_Id(eventId);
@@ -266,13 +266,13 @@ public class EventServiceImpl implements EventService {
     public EventRequestStatusUpdateResult patchRequestsStatusOfEvent(Long userId, Long eventId,
                                                                      EventRequestStatusUpdateRequest dto) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Обновление данных события. Событие с ID: " + eventId + " не найдено."));
+                String.format("Обновление данных события. Событие с ID=%d не найдено.", eventId)));
 
         if (!event.getInitiator().getId().equals(userId)) {
             log.error("Обновление статусов заявок. " +
                     "Пользователь с ID: {} не является инициатором события с ID: {}", userId, eventId);
-            throw new NotFoundException("Пользователь с ID: " +
-                    userId + " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID=%d не является инициатором события с ID=%d ", userId, eventId));
         }
 
         Long participantLimit = event.getParticipantLimit().longValue();
@@ -294,9 +294,9 @@ public class EventServiceImpl implements EventService {
             if (request.getStatus() != RequestStatus.PENDING) {
                 log.error("Обновление статусов заявок. Заявка с ID: {} имеет статус {}, а не PENDING",
                         request.getId(), request.getStatus());
-                throw new CreationRulesException("Статус можно изменить только у заявок, " +
-                        "находящихся в состоянии ожидания: " + RequestStatus.PENDING +
-                        ". Текущий статус заявки: " + request.getStatus());
+                throw new CreationRulesException(
+                        String.format("Статус можно изменить только у заявок, находящихся в состоянии ожидания: %s. " +
+                                "Текущий статус заявки: %s", RequestStatus.PENDING, request.getStatus()));
             }
         }
 
@@ -318,7 +318,7 @@ public class EventServiceImpl implements EventService {
             if (participantLimit.equals(approvedRequestsCount) && participantLimit > 0) {
                 log.error("Обновление статусов заявок на участие в событии. " +
                         "Достигнут лимит одобренных заявок в событии с ID: {}.", eventId);
-                throw new CreationRulesException("Достигнут лимит одобренных заявок в событии с ID: " + eventId + ".");
+                throw new CreationRulesException(String.format("Достигнут лимит одобренных заявок в событии с ID=%d. ", eventId));
             }
         }
 
@@ -388,7 +388,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto patchEventByIdByAdmin(Long eventId, UpdateEventAdminRequest dto) {
         Event oldEvent = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Уровень Admin. Обновление данных события. Событие с ID: " + eventId + " не найдено."));
+                String.format("Уровень Admin. Обновление данных события. Событие с ID=%d не найдено.",  eventId )));
 
         log.info("Публикация события. Текущий статус: {}, eventDate: {}",
                 oldEvent.getState(), oldEvent.getEventDate());
@@ -426,8 +426,8 @@ public class EventServiceImpl implements EventService {
 
         if (dto.getCategory() != null) {
             Category category = categoryRepository.findById(dto.getCategory()).orElseThrow(() -> new NotFoundException(
-                    "Обновление данных события администратором. " +
-                            "Категория с ID: " + dto.getCategory() + " не найдена."));
+                    String.format("Обновление данных события администратором. " +
+                            "Категория с ID=%d не найдена.",dto.getCategory() )));
 
             oldEvent.setCategory(category);
         }
@@ -547,7 +547,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getEventByIdByPublicRequest(Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Публичный запрос на получение данных о событии. Событие с ID: " + eventId + " не найдено."));
+                String.format("Публичный запрос на получение данных о событии. Событие с ID=%d не найдено.", eventId )));
 
         if (!event.getState().equals(EventState.PUBLISHED)) {
             log.error("Уровень Public. Можно получить данные только события со статусом {}.", EventState.PUBLISHED);

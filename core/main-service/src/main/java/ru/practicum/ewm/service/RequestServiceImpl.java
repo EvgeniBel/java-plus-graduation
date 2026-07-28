@@ -131,21 +131,18 @@ public class RequestServiceImpl implements RequestService {
     //Получение пользователя
     private User findUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("User with id " + userId + " not found")
-        );
+                () -> new NotFoundException(String.format("User with id =%d not found", userId)));
     }
 
     //Получение события
     private Event findEvent(Long eventId) {
         return eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException("Event with id " + eventId + " not found")
-        );
+                () -> new NotFoundException(String.format("Event with id=%d not found", eventId)));
     }
 
     //Получение запроса
     private ParticipationRequest findParticipationRequest(Long requestId) {
         return requestRepository.findById(requestId).orElseThrow(
-                () -> new NotFoundException("Request with id " + requestId + " not found")
-        );
+                () -> new NotFoundException(String.format("Request with id=%d not found", requestId)));
     }
 }
