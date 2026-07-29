@@ -30,6 +30,9 @@ public interface EventClient {
     @GetMapping(EVENT_SHORT)
     EventShortDto getEventShort(@PathVariable("eventId") Long eventId);
 
+    @GetMapping(EVENT_FULL)
+    EventFullDto getEventFull(@PathVariable("eventId") Long eventId);
+
     // === ПОЛЬЗОВАТЕЛЬСКИЕ ===
     @PostMapping(EVENTS_USER)
     EventFullDto createEvent(

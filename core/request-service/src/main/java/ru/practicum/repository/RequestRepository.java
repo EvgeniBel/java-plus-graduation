@@ -2,10 +2,10 @@ package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import ru.practicum.ewm.dto.event.ConfirmedRequestCount;
-import ru.practicum.ewm.model.request.ParticipationRequest;
-import ru.practicum.ewm.model.request.RequestStatus;
+import ru.practicum.model.ParticipationRequest;
+import ru.practicum.model.RequestStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,29 +13,24 @@ import java.util.Optional;
 @Repository
 public interface RequestRepository extends JpaRepository<ParticipationRequest, Long> {
 
-    @Query("""
-            select r
-            from ParticipationRequest r
-            where r.requester.id = :userId
-            """)
-    List<ParticipationRequest> findAllByUserId(long userId);
+    @Query("SELECT r FROM ParticipationRequest r WHERE r.requesterId = :userId")
+    List<ParticipationRequest> findAllByUserId(@Param("userId") Long userId);
 
-    @Query("""
-            UPDATE ParticipationRequest r
-            SET r.status = :state
-            WHERE r.id = :requestId
-            """)
-    int changeState(long requestId, RequestStatus state);
+    @Query("UPDATE ParticipationRequest r SET r.status = :status WHERE r.id = :requestId")
+    int changeState(@Param("requestId") Long requestId, @Param("status") RequestStatus status);
 
-    Long countByEvent_IdAndStatus(Long eventId, RequestStatus status);
+    Long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
-    @Query("select new ru.practicum.ewm.dto.event.ConfirmedRequestCount(r.event.id, count(r.id)) " +
-            "from ParticipationRequest r " +
-            "where r.event.id in :eventIds and r.status = :status " +
-            "group by r.event.id")
-    List<ConfirmedRequestCount> countConfirmedRequestsByEventIds(List<Long> eventIds, RequestStatus status);
+    @Query("SELECT r.eventId, COUNT(r.id) " +
+            "FROM ParticipationRequest r " +
+            "WHERE r.eventId IN :eventIds AND r.status = :status " +
+            "GROUP BY r.eventId")
+    List<Object[]> countConfirmedRequestsByEventIds(
+            @Param("eventIds") List<Long> eventIds,
+            @Param("status") RequestStatus status
+    );
 
-    List<ParticipationRequest> findAllByEvent_Id(Long eventId);
+    List<ParticipationRequest> findAllByEventId(Long eventId);
 
-    Optional<ParticipationRequest> findByRequester_IdAndEvent_Id(Long userId, Long eventId);
+    Optional<ParticipationRequest> findByRequesterIdAndEventId(Long userId, Long eventId);
 }

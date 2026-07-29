@@ -7,8 +7,10 @@ CREATE TABLE IF NOT EXISTS request
     requester_id BIGINT                      NOT NULL,
     status       VARCHAR(50)                 NOT NULL,
 
-    -- Внешние ключи
-    CONSTRAINT fk_request_event FOREIGN KEY (event_id) REFERENCES events (id),
-    CONSTRAINT fk_request_user FOREIGN KEY (requester_id) REFERENCES users (id),
     CONSTRAINT uq_request_event_user UNIQUE (event_id, requester_id)
 );
+
+-- Индексы для оптимизации
+CREATE INDEX IF NOT EXISTS idx_request_event_id ON request (event_id);
+CREATE INDEX IF NOT EXISTS idx_request_requester_id ON request (requester_id);
+CREATE INDEX IF NOT EXISTS idx_request_status ON request (status);

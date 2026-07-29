@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
+@EnableFeignClients(basePackages = "ru.practicum.client")
 @Slf4j
 public class RequestServiceApp {
     public static void main(String[] args) {

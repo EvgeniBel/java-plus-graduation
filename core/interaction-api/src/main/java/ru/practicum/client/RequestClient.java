@@ -13,7 +13,8 @@ import static ru.practicum.constants.ApiConstants.*;
 @FeignClient(name = "request-service")
 public interface RequestClient {
 
-    // === ПУБЛИЧНЫЕ ===
+    // ==================== ПУБЛИЧНЫЕ ====================
+
     @GetMapping(REQUESTS_COUNT)
     Long getConfirmedRequestsCount(@PathVariable("eventId") Long eventId);
 
@@ -22,14 +23,17 @@ public interface RequestClient {
             @PathVariable("eventId") Long eventId
     );
 
-    // === ПОЛЬЗОВАТЕЛЬСКИЕ ===
+    // ==================== ПОЛЬЗОВАТЕЛЬСКИЕ ====================
+
     @PostMapping(REQUEST_CREATE)
     ParticipationRequestDto createRequest(
+            @RequestHeader(USER_ID_HEADER) Long userId,  // ✅ Добавлен userId
             @Valid @RequestBody CreateUpdateRequestDto requestDto
     );
 
     @PutMapping(REQUEST_CANCEL)
     ParticipationRequestDto cancelRequest(
+            @RequestHeader(USER_ID_HEADER) Long userId,  // ✅ Добавлен userId
             @PathVariable("requestId") Long requestId
     );
 
@@ -37,4 +41,15 @@ public interface RequestClient {
     List<ParticipationRequestDto> getUserRequests(
             @RequestHeader(USER_ID_HEADER) Long userId
     );
+
+    // ==================== ВНУТРЕННИЕ (для других микросервисов) ====================
+
+    @GetMapping(REQUESTS_INTERNAL + "/event/{eventId}/count")
+    Long getConfirmedRequestsCountInternal(@PathVariable("eventId") Long eventId);
+
+    @GetMapping(REQUESTS_INTERNAL + "/event/{eventId}")
+    List<ParticipationRequestDto> getRequestsByEventInternal(@PathVariable("eventId") Long eventId);
+
+    @GetMapping(REQUESTS_INTERNAL + "/{requestId}/status")
+    String getRequestStatusInternal(@PathVariable("requestId") Long requestId);
 }

@@ -1,52 +1,50 @@
 package ru.practicum.controller;
 
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.request.CreateUpdateRequestDto;
-import ru.practicum.ewm.dto.request.ParticipationRequestDto;
-import ru.practicum.ewm.service.RequestService;
+import ru.practicum.dto.request.CreateUpdateRequestDto;
+import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.service.RequestService;
 
 import java.util.List;
+
+import static ru.practicum.constants.ApiConstants.USER_ID_HEADER;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users/{userId}/requests")
+@RequestMapping("/user/requests")
 public class RequestPrivateController {
 
     private final RequestService requestService;
 
-    @PostMapping
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(
-            @PathVariable("userId") Long userId,
-            @RequestParam Long eventId
+            @RequestHeader(USER_ID_HEADER) Long userId,
+            @Valid @RequestBody CreateUpdateRequestDto dto
     ) {
-        log.info("POST /users/{}/requests - создание запроса на участие:", userId);
-        return requestService.createRequest(
-                CreateUpdateRequestDto.builder()
-                        .userId(userId)
-                        .eventId(eventId).build()
-        );
+        log.info("POST /user/requests/create - создание запроса пользователем {}", userId);
+        return requestService.createRequest(userId, dto);
     }
 
     @GetMapping
     public List<ParticipationRequestDto> getRequestByUserId(
-            @PositiveOrZero @PathVariable("userId") Long userId
+            @RequestHeader(USER_ID_HEADER) Long userId
     ) {
-        log.info("GET /users/{}/requests - получение запросов по пользователю", userId);
+        log.info("GET /user/requests - получение запросов пользователя {}", userId);
         return requestService.getRequestByUserId(userId);
     }
 
     @PatchMapping("/{requestId}/cancel")
     public ParticipationRequestDto canceledRequest(
-            @PositiveOrZero @PathVariable("requestId") Long requestId,
-            @PathVariable("userId") Long userId
+            @RequestHeader(USER_ID_HEADER) Long userId,
+            @PathVariable("requestId") Long requestId
     ) {
-        log.info("PATCH /users/{}/requests/cancel - отмена запроса на участие в событии", userId);
+        log.info("PATCH /user/requests/{}/cancel - отмена запроса пользователем {}", requestId, userId);
         return requestService.canceledRequest(userId, requestId);
     }
 }

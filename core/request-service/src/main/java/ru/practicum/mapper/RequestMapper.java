@@ -1,37 +1,38 @@
 package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.ewm.constants.Constants;
-import ru.practicum.ewm.dto.request.ParticipationRequestDto;
-import ru.practicum.ewm.model.User;
-import ru.practicum.ewm.model.event.Event;
-import ru.practicum.ewm.model.request.ParticipationRequest;
-import ru.practicum.ewm.model.request.RequestStatus;
+import ru.practicum.constants.Constants;
+import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.model.ParticipationRequest;
+import ru.practicum.model.RequestStatus;
 
 import java.time.LocalDateTime;
 
 @UtilityClass
 public class RequestMapper {
 
-    //Преобразование в сущность
-    public ParticipationRequest toEntity(LocalDateTime nowData, Event event, User requester, RequestStatus status) {
+    public ParticipationRequest toEntity(
+            LocalDateTime created,
+            Long eventId,
+            Long requesterId,
+            RequestStatus status
+    ) {
         return ParticipationRequest.builder()
-                .created(nowData)
-                .event(event)
-                .requester(requester)
+                .created(created)
+                .eventId(eventId)
+                .requesterId(requesterId)
                 .status(status)
                 .build();
     }
 
-    //Преобразование в dto
-    public ParticipationRequestDto toParticipationRequestDto(ParticipationRequest req) {
+    // Преобразование в dto
+    public ParticipationRequestDto toParticipationRequestDto(ParticipationRequest request) {
         return ParticipationRequestDto.builder()
-                .id(req.getId())
-                .created(req.getCreated().format(Constants.FORMATTER))
-                .event(req.getEvent().getId())
-                .requester(req.getRequester().getId())
-                .status(req.getStatus().toString())
+                .id(request.getId())
+                .created(request.getCreated().format(Constants.FORMATTER))
+                .event(request.getEventId())
+                .requester(request.getRequesterId())
+                .status(request.getStatus().toString())
                 .build();
     }
-
 }

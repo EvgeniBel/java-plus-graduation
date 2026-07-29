@@ -23,7 +23,7 @@ public class DiscoveryUriProvider implements UriProvider {
         try {
             List<ServiceInstance> instances = discoveryClient.getInstances(statsServiceId);
             if (instances.isEmpty()) {
-                throw new StatsServerUnavailable("No instances found for service: " + statsServiceId);
+                throw new StatsServerUnavailable(String.format("No instances found for service: %s", statsServiceId));
             }
             return instances.getFirst();
         } catch (Exception exception) {

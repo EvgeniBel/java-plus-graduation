@@ -1,14 +1,15 @@
 package ru.practicum.service;
 
-import ru.practicum.ewm.dto.request.CreateUpdateRequestDto;
-import ru.practicum.ewm.dto.request.ParticipationRequestDto;
+
+import ru.practicum.dto.request.CreateUpdateRequestDto;
+import ru.practicum.dto.request.ParticipationRequestDto;
 
 import java.util.List;
 
 public interface RequestService {
 
     //    Создание нового запроса
-    ParticipationRequestDto createRequest(CreateUpdateRequestDto dto);
+    ParticipationRequestDto createRequest(Long userId, CreateUpdateRequestDto dto);
 
     //    Получение всех запросов определённого пользователя
     List<ParticipationRequestDto> getRequestByUserId(Long userId);

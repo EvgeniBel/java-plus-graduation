@@ -59,6 +59,7 @@ public final class ApiConstants {
 
     public static final String EVENT_BY_ID = EVENTS_BASE + "/" + EVENT_ID_PATH;
     public static final String EVENT_SHORT = EVENT_BY_ID + "/short";
+    public static final String EVENT_FULL = EVENT_BY_ID + "/full";
     public static final String EVENT_STATUS = EVENT_BY_ID + "/status";
     public static final String EVENT_REQUESTS = EVENT_BY_ID + "/requests";
     public static final String EVENT_REQUESTS_STATUS = EVENT_REQUESTS + "/status";
@@ -85,6 +86,7 @@ public final class ApiConstants {
 
     // ==================== ЗАПРОСЫ НА УЧАСТИЕ ====================
     public static final String REQUESTS_BASE = USER_PREFIX + "/requests";
+    public static final String REQUESTS_INTERNAL = INTERNAL_PREFIX + "/requests";
     public static final String REQUEST_BY_ID = REQUESTS_BASE + "/" + REQUEST_ID_PATH;
     public static final String REQUEST_CANCEL = REQUEST_BY_ID + "/cancel";
     public static final String REQUESTS_BY_EVENT = PUBLIC_PREFIX + "/events/" + EVENT_ID_PATH + "/requests";
