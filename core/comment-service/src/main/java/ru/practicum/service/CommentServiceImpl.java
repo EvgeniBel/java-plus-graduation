@@ -8,11 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
+import ru.practicum.constants.Constants;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.CommentStatusUpdateRequest;
 import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.comment.UpdateCommentUserRequest;
-import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.EventFullDto;  // ✅ Используем EventFullDto
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.CommentException;
 import ru.practicum.exception.NotFoundException;
@@ -43,29 +44,27 @@ public class CommentServiceImpl implements CommentService {
         try {
             UserShortDto user = userClient.getUserShort(userId);
             if (user == null) {
-                throw new NotFoundException(String.format("Пользователь с ID: %s не найден.", userId));
+                throw new NotFoundException("Пользователь с ID: " + userId + " не найден.");
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя {}: {}", userId, e.getMessage());
-            throw new NotFoundException(String.format("Пользователь с ID: %s  не найден или сервис недоступен.", userId));
+            throw new NotFoundException("Пользователь с ID: " + userId + " не найден или сервис недоступен.");
         }
 
-        // Проверяем событие через Feign и получаем его статус
-        EventShortDto event;
+        EventFullDto event;
         try {
-            event = eventClient.getEventShort(eventId);
+            event = eventClient.getEventFull(eventId);
             if (event == null) {
-                throw new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId));
+                throw new NotFoundException("Событие с ID: " + eventId + " не найдено.");
             }
 
             // Проверяем статус события - только PUBLISHED можно комментировать
-            if (event.getState() != null && !"PUBLISHED" .equals(event.getState())) {
-                throw new ValidationException(String.format("Комментарии можно оставлять только к опубликованным событиям." +
-                        " Текущий статус: %s", event.getState()));
+            if (event.getState() == null || !"PUBLISHED".equals(event.getState())) {
+                throw new ValidationException("Комментарии можно оставлять только к опубликованным событиям. Текущий статус: " + event.getState());
             }
         } catch (Exception e) {
-            log.error("Ошибка при проверке события {}: {}", eventId, e.getMessage());
-            throw new NotFoundException(String.format("Событие с ID: %s не найдено или сервис недоступен.", eventId));
+            log.error("Ошибка при проверке событии {}: {}", eventId, e.getMessage());
+            throw new NotFoundException("Событие с ID: " + eventId + " не найдено или сервис недоступен.");
         }
 
         // Создаем комментарий

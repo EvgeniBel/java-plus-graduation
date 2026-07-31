@@ -1,8 +1,8 @@
 package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.ewm.dto.event.LocationDto;
-import ru.practicum.ewm.model.event.Location;
+import ru.practicum.dto.event.LocationDto;
+import ru.practicum.model.Location;
 
 @UtilityClass
 public class LocationMapper {
@@ -20,5 +20,4 @@ public class LocationMapper {
                 .lon(location.getLon())
                 .build();
     }
-
 }

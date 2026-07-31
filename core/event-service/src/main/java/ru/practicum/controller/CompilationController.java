@@ -4,9 +4,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.compilation.CompilationDto;
-import ru.practicum.ewm.dto.compilation.GetManyCompilationDto;
-import ru.practicum.ewm.service.CompilationService;
+import ru.practicum.dto.compilation.CompilationDto;
+import ru.practicum.dto.compilation.GetManyCompilationDto;
+import ru.practicum.service.CompilationService;
 
 import java.util.List;
 
@@ -38,5 +38,4 @@ public class CompilationController {
     ) {
         return service.getCompilationById(compId);
     }
-
 }

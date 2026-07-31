@@ -6,10 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.compilation.CompilationDto;
-import ru.practicum.ewm.dto.compilation.CreateCompilationDto;
-import ru.practicum.ewm.dto.compilation.UpdateCompilationDto;
-import ru.practicum.ewm.service.CompilationService;
+import ru.practicum.dto.compilation.CompilationDto;
+import ru.practicum.dto.compilation.CreateCompilationDto;
+import ru.practicum.dto.compilation.UpdateCompilationDto;
+import ru.practicum.service.CompilationService;
+
 
 @Slf4j
 @RestController

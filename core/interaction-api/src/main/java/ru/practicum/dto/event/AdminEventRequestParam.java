@@ -12,9 +12,9 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class AdminEventRequestParam {
-    List<@Positive Long> users;
+    List<Long> users;
     List<String> states;
-    List<@Positive Long> categories;
+    List<Long> categories;
     String rangeStart;
     String rangeEnd;
 

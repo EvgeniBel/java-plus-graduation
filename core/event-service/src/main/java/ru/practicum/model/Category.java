@@ -6,9 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.model.event.Event;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -24,7 +21,4 @@ public class Category {
 
     @Column(name = "name", nullable = false, unique = true, length = 50)
     String name;
-
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    List<Event> events;
 }

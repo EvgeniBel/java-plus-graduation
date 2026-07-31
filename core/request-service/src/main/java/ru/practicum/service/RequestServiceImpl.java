@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
-import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventFullDto;  // ✅ Используем EventFullDto
 import ru.practicum.dto.request.CreateUpdateRequestDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.user.UserShortDto;
@@ -14,7 +14,7 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.RequestStatus;
+import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.repository.RequestRepository;
 
 import java.time.LocalDateTime;
@@ -39,28 +39,28 @@ public class RequestServiceImpl implements RequestService {
         try {
             requester = userClient.getUserShort(userId);
             if (requester == null) {
-                throw new NotFoundException((String.format("Пользователь с ID=%s не найден", userId)));
+                throw new NotFoundException("Пользователь с ID=" + userId + " не найден");
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя: {}", e.getMessage());
-            throw new NotFoundException(String.format("Пользователь с ID=%s не найден или сервис недоступен", userId));
+            throw new NotFoundException("Пользователь с ID=" + userId + " не найден или сервис недоступен");
         }
 
         EventFullDto event;
         try {
             event = eventClient.getEventFull(dto.getEventId());
             if (event == null) {
-                throw new NotFoundException(String.format("Событие с ID=%s не найдено", dto.getEventId()));
+                throw new NotFoundException("Событие с ID=" + dto.getEventId() + " не найдено");
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке события: {}", e.getMessage());
-            throw new NotFoundException(String.format("Событие с ID=%s не найдено или сервис недоступен", dto.getEventId()));
+            throw new NotFoundException("Событие с ID=" + dto.getEventId() + " не найдено или сервис недоступен");
         }
 
         // Проверка, что событие опубликовано
         if (event.getState() == null || !"PUBLISHED".equals(event.getState())) {
             log.error("Не удается создать запрос на неопубликованное событие с id={}", dto.getEventId());
-            throw new ConflictException(String.format("Событие еще не опубликовано. Текущий статус: %s", event.getState()));
+            throw new ConflictException("Событие еще не опубликовано. Текущий статус: " + event.getState());
         }
 
         // Проверка, что инициатор не пытается участвовать в своем событии

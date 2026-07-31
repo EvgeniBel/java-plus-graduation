@@ -4,7 +4,7 @@ import lombok.experimental.UtilityClass;
 import ru.practicum.constants.Constants;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.RequestStatus;
+import ru.practicum.dto.request.RequestStatus;
 
 import java.time.LocalDateTime;
 

@@ -16,7 +16,7 @@ public class PageRequestDto {
 
     @Positive
     @Builder.Default
-    Integer size = ApiConstants.DEFAULT_PAGE_SIZE;
+    Integer size = 10;
 
     public Integer getOffset() {
         return from;

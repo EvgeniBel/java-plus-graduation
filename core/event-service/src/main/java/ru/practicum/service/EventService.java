@@ -1,7 +1,7 @@
 package ru.practicum.service;
 
-import ru.practicum.ewm.dto.event.*;
-import ru.practicum.ewm.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.request.ParticipationRequestDto;
 
 import java.util.List;
 
@@ -30,4 +30,11 @@ public interface EventService {
 
     EventFullDto getEventByIdByPublicRequest(Long eventId);
 
+    boolean eventExists(Long eventId);
+
+    EventFullDto getEventFull(Long eventId);
+
+    EventShortDto getEventShort(Long eventId);
+
+    String getEventStatus(Long eventId);
 }

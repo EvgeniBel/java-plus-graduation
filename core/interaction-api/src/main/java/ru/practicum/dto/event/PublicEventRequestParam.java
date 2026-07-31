@@ -1,5 +1,4 @@
 package ru.practicum.dto.event;
-
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,6 +14,10 @@ public class PublicEventRequestParam {
     String rangeEnd;
     Boolean onlyAvailable;
     String sort;
-    Integer from;
-    Integer size;
+
+    @Builder.Default
+    Integer from = 0;
+
+    @Builder.Default
+    Integer size = 10;
 }

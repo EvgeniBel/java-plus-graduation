@@ -14,7 +14,6 @@
     <artifactId>core</artifactId>
     <packaging>pom</packaging>
     <name>Core Module</name>
-    <description>Модуль основных сервисов приложения Explore With Me</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -24,7 +23,6 @@
     </properties>
 
     <modules>
-        <module>main-service</module>
         <module>comment-service</module>
         <module>event-service</module>
         <module>interaction-api</module>
@@ -32,59 +30,14 @@
         <module>user-service</module>
     </modules>
 
-    <!--   dependencyManagement для передачи версий в дочерние модули -->
+    <!-- ✅ Добавить dependencyManagement -->
     <dependencyManagement>
         <dependencies>
-            <!-- Spring Boot BOM -->
+            <!-- ✅ jakarta.persistence API -->
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>3.2.1</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring Cloud BOM -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud-dependencies.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Внутренние модули -->
-            <dependency>
-                <groupId>ru.practicum</groupId>
-                <artifactId>stats-dto</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ru.practicum</groupId>
-                <artifactId>stats-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- QueryDSL -->
-            <dependency>
-                <groupId>com.querydsl</groupId>
-                <artifactId>querydsl-jpa</artifactId>
-                <classifier>jakarta</classifier>
-                <version>${querydsl.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.querydsl</groupId>
-                <artifactId>querydsl-apt</artifactId>
-                <classifier>jakarta</classifier>
-                <version>${querydsl.version}</version>
-            </dependency>
-
-            <!-- Lombok -->
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-                <optional>true</optional>
+                <groupId>jakarta.persistence</groupId>
+                <artifactId>jakarta.persistence-api</artifactId>
+                <version>3.1.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
