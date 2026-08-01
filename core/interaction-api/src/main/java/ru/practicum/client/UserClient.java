@@ -3,6 +3,8 @@ package ru.practicum.client;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.client.fallback.UserClientFallback;
+import ru.practicum.config.FeignConfig;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
@@ -11,10 +13,12 @@ import java.util.List;
 
 import static ru.practicum.constants.ApiConstants.*;
 
-@FeignClient(name = "user-service")
+@FeignClient(
+        name = "user-service",
+        fallback = UserClientFallback.class,
+        configuration = FeignConfig.class
+)
 public interface UserClient {
-
-    // ==================== АДМИНИСТРАТОР ====================
 
     @PostMapping(USERS_BASE)
     UserDto createUser(@Valid @RequestBody NewUserRequest userRequest);
@@ -47,8 +51,6 @@ public interface UserClient {
             @Valid @RequestBody NewUserRequest userRequest
     );
 
-    // ==================== ПУБЛИЧНЫЕ ====================
-
     @GetMapping(USER_SHORT_PUBLIC)
     UserShortDto getUserShort(@PathVariable(USER_BY_ID_PARAM) Long userId);
 
@@ -64,8 +66,6 @@ public interface UserClient {
             @RequestParam(value = FROM_PARAM, defaultValue = DEFAULT_FROM) Integer from,
             @RequestParam(value = SIZE_PARAM, defaultValue = DEFAULT_SIZE) Integer size
     );
-
-    // ==================== ВНУТРЕННИЕ (для других микросервисов) ====================
 
     @GetMapping(USER_EXISTS_INTERNAL)
     boolean checkUserExists(@PathVariable(USER_BY_ID_PARAM) Long userId);

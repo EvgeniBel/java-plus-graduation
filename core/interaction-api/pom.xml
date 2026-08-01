@@ -43,11 +43,18 @@
             <artifactId>spring-data-commons</artifactId>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- Resilience4j для Feign -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
+        <!--  Resilience4j Feign -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-feign</artifactId>
+            <version>2.2.0</version>
         </dependency>
 
         <!-- Jackson -->
@@ -56,13 +63,13 @@
             <artifactId>jackson-annotations</artifactId>
         </dependency>
 
-        <!-- ✅ Spring Boot Starter Data JPA -->
+        <!-- Spring Boot Starter Data JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- ✅ QueryDSL -->
+        <!-- QueryDSL -->
         <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-jpa</artifactId>
@@ -70,11 +77,24 @@
             <version>${querydsl.version}</version>
         </dependency>
 
-        <!-- ✅ jakarta.persistence API -->
+        <!-- jakarta.persistence API -->
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
             <version>3.1.0</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--  SLF4J для логирования -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

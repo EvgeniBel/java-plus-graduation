@@ -602,26 +602,82 @@ public class EventServiceImpl implements EventService {
 
     // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
 
+
+    //  Метод для получения пользователя с Fallback
     private UserShortDto getUser(Long userId) {
         try {
             return userClient.getUserShort(userId);
         } catch (Exception e) {
             log.warn("Не удалось получить пользователя {}: {}", userId, e.getMessage());
-            return null;
+            UserShortDto defaultUser = new UserShortDto();
+            defaultUser.setId(userId);
+            defaultUser.setName("Unknown User");
+            return defaultUser;
         }
     }
 
-    private Map<Long, UserShortDto> getUsers(List<Event> events) {
-        List<Long> userIds = events.stream()
-                .map(Event::getInitiatorId)
-                .distinct()
-                .collect(Collectors.toList());
+    // Метод для получения количества запросов с Fallback
+    private Long getConfirmedRequestsCount(Event event) {
+        try {
+            Long count = requestClient.getConfirmedRequestsCount(event.getId());
+            return count != null ? count : 0L;
+        } catch (Exception e) {
+            log.warn("Не удалось получить количество запросов для события {}: {}, возвращаем 0",
+                    event.getId(), e.getMessage());
+            return 0L; // ⚠️ Fallback: возвращаем 0
+        }
+    }
 
+    // Метод для получения запросов события с Fallback
+    private List<ParticipationRequestDto> getRequestsForEvent(Long eventId) {
+        try {
+            List<ParticipationRequestDto> requests = requestClient.getRequestsByEvent(eventId);
+            return requests != null ? requests : Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("Не удалось получить запросы для события {}: {}, возвращаем пустой список",
+                    eventId, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    // Метод для получения списка пользователей с Fallback
+    private Map<Long, UserShortDto> getUsers(List<Event> events) {
         Map<Long, UserShortDto> result = new HashMap<>();
-        for (Long userId : userIds) {
-            UserShortDto user = getUser(userId);
-            if (user != null) {
-                result.put(userId, user);
+        for (Event event : events) {
+            Long userId = event.getInitiatorId();
+            try {
+                UserShortDto user = userClient.getUserShort(userId);
+                if (user != null) {
+                    result.put(userId, user);
+                } else {
+                    result.put(userId, createDefaultUser(userId));
+                }
+            } catch (Exception e) {
+                log.warn("Не удалось получить пользователя {}: {}", userId, e.getMessage());
+                result.put(userId, createDefaultUser(userId));
+            }
+        }
+        return result;
+    }
+
+    private UserShortDto createDefaultUser(Long userId) {
+        UserShortDto defaultUser = new UserShortDto();
+        defaultUser.setId(userId);
+        defaultUser.setName("Unknown User");
+        return defaultUser;
+    }
+
+    // Метод для получения количества запросов для списка событий с Fallback
+    private Map<Long, Long> getConfirmedRequestsCount(List<Event> events) {
+        Map<Long, Long> result = new HashMap<>();
+        for (Event event : events) {
+            try {
+                Long count = requestClient.getConfirmedRequestsCount(event.getId());
+                result.put(event.getId(), count != null ? count : 0L);
+            } catch (Exception e) {
+                log.warn("Не удалось получить количество запросов для события {}: {}, возвращаем 0",
+                        event.getId(), e.getMessage());
+                result.put(event.getId(), 0L);
             }
         }
         return result;
@@ -677,30 +733,5 @@ public class EventServiceImpl implements EventService {
             log.warn("Не удалось получить статистику просмотров: {}", e.getMessage());
             return Collections.emptyMap();
         }
-    }
-
-    private Long getConfirmedRequestsCount(Event event) {
-        return getConfirmedRequestsCount(List.of(event)).getOrDefault(event.getId(), 0L);
-    }
-
-    private Map<Long, Long> getConfirmedRequestsCount(List<Event> events) {
-        if (events.isEmpty()) return Collections.emptyMap();
-
-        List<Long> eventIds = events.stream()
-                .map(Event::getId)
-                .collect(Collectors.toList());
-
-        Map<Long, Long> result = new HashMap<>();
-        for (Long eventId : eventIds) {
-            try {
-                Long count = requestClient.getConfirmedRequestsCount(eventId);
-                result.put(eventId, count != null ? count : 0L);
-            } catch (Exception e) {
-                log.warn("Не удалось получить количество подтвержденных запросов для события {}: {}",
-                        eventId, e.getMessage());
-                result.put(eventId, 0L);
-            }
-        }
-        return result;
     }
 }
