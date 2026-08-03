@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.service.RequestService;
 
+import static ru.practicum.constants.ApiConstants.REQUEST_STATUS_UPDATE;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -14,7 +16,7 @@ public class RequestInternalController {
 
     private final RequestService requestService;
 
-    @PatchMapping("/{requestId}/status")
+    @PostMapping("/{requestId}/status")
     public ParticipationRequestDto updateRequestStatus(
             @PathVariable Long requestId,
             @RequestParam String status

@@ -665,12 +665,14 @@ public class EventServiceImpl implements EventService {
     // Метод для получения количества запросов с Fallback
     private Long getConfirmedRequestsCount(Event event) {
         try {
+            log.info("Запрос количества подтверждённых запросов для события {} по пути: {}",
+                    event.getId(), "/public/events/" + event.getId() + "/requests/count");
             Long count = requestClient.getConfirmedRequestsCount(event.getId());
+            log.info("Получено: {} для события {}", count, event.getId());
             return count != null ? count : 0L;
         } catch (Exception e) {
-            log.warn("Не удалось получить количество запросов для события {}: {}, возвращаем 0",
-                    event.getId(), e.getMessage());
-            return 0L; // ⚠️ Fallback: возвращаем 0
+            log.error("Ошибка получения количества запросов для события {}: {}", event.getId(), e.getMessage());
+            return 0L;
         }
     }
 

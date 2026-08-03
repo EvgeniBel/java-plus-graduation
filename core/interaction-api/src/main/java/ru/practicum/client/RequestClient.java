@@ -44,7 +44,7 @@ public interface RequestClient {
             @RequestHeader(USER_ID_HEADER) Long userId
     );
 
-    @PatchMapping(REQUEST_STATUS_UPDATE)
+    @PostMapping(REQUEST_STATUS_UPDATE)
     ParticipationRequestDto updateRequestStatus(
             @PathVariable("requestId") Long requestId,
             @RequestParam("status") String status
