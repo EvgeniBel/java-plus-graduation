@@ -54,7 +54,7 @@ public interface UserClient {
     @GetMapping(USER_SHORT_PUBLIC)
     UserShortDto getUserShort(@PathVariable(USER_BY_ID_PARAM) Long userId);
 
-    @GetMapping(USERS_SHORT_PUBLIC)
+    @GetMapping(USER_SHORT_PUBLIC)
     List<UserShortDto> getUsersShort(
             @RequestParam(value = FROM_PARAM, defaultValue = DEFAULT_FROM) Integer from,
             @RequestParam(value = SIZE_PARAM, defaultValue = DEFAULT_SIZE) Integer size

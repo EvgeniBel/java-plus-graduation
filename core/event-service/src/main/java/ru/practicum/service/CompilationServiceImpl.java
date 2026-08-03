@@ -2,6 +2,7 @@ package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,9 @@ import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CompilationMapper;
 import ru.practicum.model.Compilation;
+import ru.practicum.model.Event;
 import ru.practicum.repository.CompilationRepository;
+import ru.practicum.repository.EventRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationRepository compilationRepository;
+    private final EventRepository eventRepository;
     private final EventService eventService;
 
     @Transactional
@@ -35,13 +39,22 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Создание подборки: title={}, events={}, pinned={}",
                 dto.getTitle(), dto.getEvents(), dto.getPinned());
 
+        // Создаем подборку
         Compilation compilation = CompilationMapper.toEntity(dto);
+
+        // Если есть события - загружаем их и добавляем в подборку
+        if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
+            List<Event> events = eventRepository.findAllById(dto.getEvents());
+            compilation.setEvents(events);
+        }
+
         Compilation saved = compilationRepository.save(compilation);
         log.info("Подборка создана с id: {}", saved.getId());
 
         // Получаем события для ответа
-        List<Long> eventIds = CompilationMapper.getEventIdsFromString(saved.getEventIds());
-        List<EventShortDto> events = eventService.getShortEventsInfoByIds(eventIds);
+        List<EventShortDto> events = eventService.getShortEventsInfoByIds(
+                CompilationMapper.getEventIds(saved)
+        );
 
         return CompilationMapper.toCompilationDto(saved, events);
     }
@@ -54,21 +67,21 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation compilation = compilationRepository.findById(dto.getId())
                 .orElseThrow(() -> new NotFoundException("Подборка с id=" + dto.getId() + " не найдена"));
 
-        if (dto.getTitle() != null) {
-            compilation.setTitle(dto.getTitle());
-        }
-        if (dto.getPinned() != null) {
-            compilation.setPinned(dto.getPinned());
-        }
+        // Обновляем основные поля
+        CompilationMapper.updateEntity(compilation, dto);
+
+        // Обновляем список событий
         if (dto.getEvents() != null) {
-            compilation.setEventIds(convertListToString(dto.getEvents()));
+            List<Event> events = eventRepository.findAllById(dto.getEvents());
+            compilation.setEvents(events);
         }
 
         Compilation updated = compilationRepository.save(compilation);
         log.info("Подборка обновлена, id: {}", updated.getId());
 
-        List<Long> eventIds = CompilationMapper.getEventIdsFromString(updated.getEventIds());
-        List<EventShortDto> events = eventService.getShortEventsInfoByIds(eventIds);
+        List<EventShortDto> events = eventService.getShortEventsInfoByIds(
+                CompilationMapper.getEventIds(updated)
+        );
 
         return CompilationMapper.toCompilationDto(updated, events);
     }
@@ -93,12 +106,15 @@ public class CompilationServiceImpl implements CompilationService {
         int page = dto.getFrom() / dto.getSize();
         Pageable pageable = PageRequest.of(page, dto.getSize());
 
-        List<Compilation> compilations;
+        // Получаем подборки с пагинацией
+        Page<Compilation> compilationsPage;
         if (dto.getPinned() != null) {
-            compilations = compilationRepository.findAllByPinned(dto.getPinned(), pageable).getContent();
+            compilationsPage = compilationRepository.findAllByPinned(dto.getPinned(), pageable);
         } else {
-            compilations = compilationRepository.findAll(pageable).getContent();
+            compilationsPage = compilationRepository.findAll(pageable);
         }
+
+        List<Compilation> compilations = compilationsPage.getContent();
 
         if (compilations.isEmpty()) {
             return new ArrayList<>();
@@ -106,7 +122,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         // Собираем все ID событий из всех подборок
         List<Long> allEventIds = compilations.stream()
-                .flatMap(c -> CompilationMapper.getEventIdsFromString(c.getEventIds()).stream())
+                .flatMap(c -> CompilationMapper.getEventIds(c).stream())
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -118,7 +134,7 @@ public class CompilationServiceImpl implements CompilationService {
         // Формируем результат
         return compilations.stream()
                 .map(comp -> {
-                    List<Long> eventIds = CompilationMapper.getEventIdsFromString(comp.getEventIds());
+                    List<Long> eventIds = CompilationMapper.getEventIds(comp);
                     List<EventShortDto> events = eventIds.stream()
                             .map(eventMap::get)
                             .filter(e -> e != null)
@@ -132,24 +148,14 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto getCompilationById(Long compId) {
         log.info("Получение подборки по id: {}", compId);
 
-        Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Подборка с id=" + compId + " не найдена"));
+        Compilation compilation = compilationRepository.findByIdWithEvents(compId);
+        if (compilation == null) {
+            throw new NotFoundException("Подборка с id=" + compId + " не найдена");
+        }
 
-        List<Long> eventIds = CompilationMapper.getEventIdsFromString(compilation.getEventIds());
+        List<Long> eventIds = CompilationMapper.getEventIds(compilation);
         List<EventShortDto> events = eventService.getShortEventsInfoByIds(eventIds);
 
         return CompilationMapper.toCompilationDto(compilation, events);
-    }
-
-    // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-
-
-    private String convertListToString(List<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) {
-            return "";
-        }
-        return eventIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
     }
 }

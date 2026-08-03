@@ -9,8 +9,8 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5434/ewm-stats-server
-    username: postgres-ewm-stats-server
-    password: password
+    username: ewm
+    password: ewm
 
   jpa:
     hibernate:

@@ -13,8 +13,8 @@ import ru.practicum.service.CommentService;
 
 @Slf4j
 @RestController
-@RequestMapping("/public/events/{eventId}/comments")
 @RequiredArgsConstructor
+@RequestMapping("/events/{eventId}/comments")
 public class CommentPublicController {
 
     private final CommentService commentService;

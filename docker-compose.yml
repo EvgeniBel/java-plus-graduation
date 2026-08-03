@@ -1,116 +1,113 @@
 services:
-  postgres-main:
-    image: postgres:15
-    container_name: postgres-main
-    environment:
-      POSTGRES_DB: ewm-main-service
-      POSTGRES_USER: ewm
-      POSTGRES_PASSWORD: ewm
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres-main-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-main-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+  # ==================== БАЗЫ ДАННЫХ ====================
 
   postgres-stats:
     image: postgres:15
     container_name: postgres-stats
     environment:
       POSTGRES_DB: ewm-stats-server
-      POSTGRES_USER: postgres-ewm-stats-server
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ewm
+      POSTGRES_PASSWORD: ewm
     ports:
       - "5434:5432"
     volumes:
       - postgres-stats-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-stats-server -d ewm-stats-server"]
+      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-stats-server"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - ewm-network
 
   postgres-event:
     image: postgres:15
     container_name: postgres-event
     environment:
       POSTGRES_DB: ewm-event-service
-      POSTGRES_USER: postgres-ewm-event-service
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ewm
+      POSTGRES_PASSWORD: ewm
     ports:
       - "5435:5432"
     volumes:
       - postgres-event-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-event-service -d ewm-event-service"]
+      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-event-service"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - ewm-network
 
   postgres-comment:
     image: postgres:15
     container_name: postgres-comment
     environment:
       POSTGRES_DB: ewm-comment-service
-      POSTGRES_USER: postgres-ewm-comment-service
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ewm
+      POSTGRES_PASSWORD: ewm
     ports:
       - "5436:5432"
     volumes:
       - postgres-comment-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-comment-service -d ewm-comment-service"]
+      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-comment-service"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - ewm-network
 
   postgres-request:
     image: postgres:15
     container_name: postgres-request
     environment:
       POSTGRES_DB: ewm-request-service
-      POSTGRES_USER: postgres-ewm-request-service
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ewm
+      POSTGRES_PASSWORD: ewm
     ports:
       - "5437:5432"
     volumes:
       - postgres-request-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-request-service -d ewm-request-service"]
+      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-request-service"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - ewm-network
 
   postgres-user:
     image: postgres:15
     container_name: postgres-user
     environment:
       POSTGRES_DB: ewm-user-service
-      POSTGRES_USER: postgres-ewm-user-service
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ewm
+      POSTGRES_PASSWORD: ewm
     ports:
       - "5438:5432"
     volumes:
       - postgres-user-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres-ewm-user-service -d ewm-user-service"]
+      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-user-service"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - ewm-network
 
 volumes:
-  postgres-main-data:
   postgres-stats-data:
   postgres-event-data:
   postgres-comment-data:
   postgres-request-data:
   postgres-user-data:
+
+networks:
+  ewm-network:
+    driver: bridge

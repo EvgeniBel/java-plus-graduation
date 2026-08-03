@@ -2,7 +2,6 @@ package ru.practicum.client;
 
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.*;
 
@@ -23,15 +22,23 @@ public interface EventClient {
     @GetMapping(EVENT_EXISTS)
     boolean eventExists(@PathVariable("eventId") Long eventId);
 
+    @GetMapping(EVENT_FULL)
+    EventFullDto getEventFull(@PathVariable("eventId") Long eventId);
+
     // === ПУБЛИЧНЫЕ ===
     @GetMapping(EVENTS_PUBLIC)
-    List<EventShortDto> getPublicEvents(@SpringQueryMap PublicEventRequestParam params);
+    List<EventShortDto> getPublicEvents(@RequestParam(required = false) String text,
+                                        @RequestParam(required = false) List<Long> categories,
+                                        @RequestParam(required = false) Boolean paid,
+                                        @RequestParam(required = false) String rangeStart,
+                                        @RequestParam(required = false) String rangeEnd,
+                                        @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+                                        @RequestParam(required = false) String sort,
+                                        @RequestParam(defaultValue = "0") Integer from,
+                                        @RequestParam(defaultValue = "10") Integer size);
 
     @GetMapping(EVENT_SHORT)
     EventShortDto getEventShort(@PathVariable("eventId") Long eventId);
-
-    @GetMapping(EVENT_BY_ID)
-    EventFullDto getEventFull(@PathVariable("eventId") Long eventId);
 
     // === ПОЛЬЗОВАТЕЛЬСКИЕ ===
     @PostMapping(EVENTS_USER)

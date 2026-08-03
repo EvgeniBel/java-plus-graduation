@@ -5,9 +5,9 @@ public final class ApiConstants {
     private ApiConstants() {}
 
     // ==================== БАЗОВЫЕ ПУТИ ====================
-    public static final String API_PREFIX = "/api";
+    public static final String API_PREFIX = "";
     public static final String ADMIN_PREFIX = API_PREFIX + "/admin";
-    public static final String USER_PREFIX = API_PREFIX + "/user";
+    public static final String USER_PREFIX = API_PREFIX + "/users";
     public static final String PUBLIC_PREFIX = API_PREFIX + "/public";
     public static final String INTERNAL_PREFIX = API_PREFIX + "/internal";
 
@@ -44,9 +44,8 @@ public final class ApiConstants {
     public static final String USER_EXISTS = USER_BY_ID + "/exists";
     public static final String USER_EXISTS_INTERNAL = USERS_INTERNAL + "/" + USER_ID_PATH + "/exists";
 
-    public static final String USER_SHORT_PUBLIC = USERS_PUBLIC + "/" + USER_ID_PATH + "/short";
-    public static final String USERS_SHORT_PUBLIC = USERS_PUBLIC + "/short";
-    public static final String USERS_SEARCH_PUBLIC = USERS_PUBLIC + "/search";
+    public static final String USER_SHORT_PUBLIC = PUBLIC_PREFIX + "/users/" + USER_ID_PATH + "/short";
+    public static final String USERS_SEARCH_PUBLIC = PUBLIC_PREFIX + "/users/search";
     public static final String USERS_BY_IDS = USERS_BASE + "/ids";
     public static final String USER_BY_ID_INTERNAL = USERS_INTERNAL + "/" + USER_ID_PATH;
     public static final String USER_VALIDATE_INTERNAL = USERS_INTERNAL + "/validate";
@@ -54,7 +53,7 @@ public final class ApiConstants {
     // ==================== СОБЫТИЯ ====================
     public static final String EVENTS_BASE = ADMIN_PREFIX + "/events";
     public static final String EVENTS_PUBLIC = PUBLIC_PREFIX + "/events";
-    public static final String EVENTS_USER = USER_PREFIX + "/events";
+    public static final String EVENTS_USER = USER_PREFIX + "/{userId}/events";
     public static final String EVENTS_INTERNAL = INTERNAL_PREFIX + "/events";
 
     public static final String EVENT_BY_ID = EVENTS_BASE + "/" + EVENT_ID_PATH;
@@ -76,22 +75,23 @@ public final class ApiConstants {
 
     public static final String COMMENT_BY_ID = COMMENTS_BASE + "/" + COMMENT_ID_PATH;
     public static final String COMMENT_MODERATE = COMMENTS_BASE + "/" + COMMENT_ID_PATH + "/moderate";
-    public static final String COMMENTS_BY_EVENT = PUBLIC_PREFIX + "/events/" + EVENT_ID_PATH + "/comments";
-    public static final String COMMENTS_BY_USER = USER_PREFIX + "/users/" + USER_ID_PATH + "/comments";
-    public static final String COMMENT_PUBLIC_BY_ID = COMMENTS_PUBLIC + "/" + COMMENT_ID_PATH;
+    public static final String COMMENTS_BY_EVENT = "/events/" + EVENT_ID_PATH + "/comments";
+    public static final String COMMENTS_BY_USER = USER_PREFIX + "/" + USER_ID_PATH + "/comments";
+    public static final String COMMENT_PUBLIC_BY_ID = "/comments/" + COMMENT_ID_PATH;
 
-    //  Внутренние пути для комментариев
+    // Внутренние пути для комментариев
     public static final String COMMENT_EXISTS_INTERNAL = COMMENTS_INTERNAL + "/" + COMMENT_ID_PATH + "/exists";
     public static final String COMMENT_STATUS_INTERNAL = COMMENTS_INTERNAL + "/" + COMMENT_ID_PATH + "/status";
 
     // ==================== ЗАПРОСЫ НА УЧАСТИЕ ====================
-    public static final String REQUESTS_BASE = USER_PREFIX + "/requests";
+    public static final String REQUESTS_BASE = "/users/{userId}/requests";
     public static final String REQUESTS_INTERNAL = INTERNAL_PREFIX + "/requests";
     public static final String REQUEST_BY_ID = REQUESTS_BASE + "/" + REQUEST_ID_PATH;
     public static final String REQUEST_CANCEL = REQUEST_BY_ID + "/cancel";
     public static final String REQUESTS_BY_EVENT = PUBLIC_PREFIX + "/events/" + EVENT_ID_PATH + "/requests";
     public static final String REQUESTS_COUNT = REQUESTS_BY_EVENT + "/count";
-    public static final String REQUEST_CREATE = REQUESTS_BASE + "/create";
+    public static final String REQUEST_CREATE = REQUESTS_BASE;
+    public static final String REQUEST_STATUS_UPDATE = REQUESTS_INTERNAL + "/" + REQUEST_ID_PATH + "/status";
 
     // ==================== КАТЕГОРИИ ====================
     public static final String CATEGORIES_BASE = ADMIN_PREFIX + "/categories";

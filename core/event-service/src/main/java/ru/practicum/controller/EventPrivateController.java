@@ -21,90 +21,76 @@ import java.util.List;
 @Slf4j
 @Validated
 public class EventPrivateController {
+
     private final EventService eventService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto addEvent(
-            @PathVariable
-            @Positive Long userId,
-            @RequestBody
-            @NotNull(message = "Добавляемое событие не может быть null")
-            @Valid NewEventDto dto
+            @PathVariable @Positive Long userId,
+            @RequestBody @NotNull @Valid NewEventDto dto
     ) {
-        if (dto.getPaid() == null)
+        log.info("Создание события пользователем с ID: {}", userId);
+
+        // Устанавливаем значения по умолчанию
+        if (dto.getPaid() == null) {
             dto.setPaid(false);
-        if (dto.getParticipantLimit() == null)
+        }
+        if (dto.getParticipantLimit() == null) {
             dto.setParticipantLimit(0);
-        if (dto.getRequestModeration() == null)
+        }
+        if (dto.getRequestModeration() == null) {
             dto.setRequestModeration(true);
-        log.info("Создание нового события {} пользователем с ID: {}", dto, userId);
+        }
+
         return eventService.addEvent(userId, dto);
     }
 
     @GetMapping
     public List<EventShortDto> getEventsOfUser(
-            @PathVariable
-            @Positive Long userId,
-            @RequestParam(defaultValue = "0")
-            @PositiveOrZero Integer from,
-            @RequestParam(defaultValue = "10")
-            @Positive Integer size
+            @PathVariable @Positive Long userId,
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size
     ) {
-        log.info("Получение списка из {} событий пользователя с ID: {}. Пропускаем {} элементов. ", size, userId, from);
+        log.info("Получение событий пользователя с ID: {}, from={}, size={}", userId, from, size);
         return eventService.getEventsOfUser(userId, from, size);
     }
 
     @GetMapping("/{eventId}")
     public EventFullDto getEventById(
-            @PathVariable
-            @Positive Long userId,
-            @PathVariable
-            @Positive Long eventId
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId
     ) {
-        log.info("Получение пользователем с ID: {} созданного им события с ID: {}. ", userId, eventId);
+        log.info("Получение события с ID: {} пользователем с ID: {}", eventId, userId);
         return eventService.getEventById(userId, eventId);
     }
 
     @PatchMapping("/{eventId}")
     public EventFullDto patchEventById(
-            @PathVariable
-            @Positive Long userId,
-            @PathVariable
-            @Positive Long eventId,
-            @RequestBody
-            @NotNull(message = "Данные для обновления события не могут быть null")
-            @Valid UpdateEventUserRequest dto
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId,
+            @RequestBody @NotNull @Valid UpdateEventUserRequest dto
     ) {
-        log.info("Обновление пользователем с ID: {} созданного им события с ID: {}. ", userId, eventId);
+        log.info("Обновление события с ID: {} пользователем с ID: {}", eventId, userId);
         return eventService.patchEventById(userId, eventId, dto);
     }
 
     @GetMapping("/{eventId}/requests")
     public List<ParticipationRequestDto> getRequestsOfEvent(
-            @PathVariable
-            @Positive Long userId,
-            @PathVariable
-            @Positive Long eventId
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId
     ) {
-        log.info("Получение пользователем с ID: {} запросов на участие в созданном им событии с ID: {}. ",
-                userId, eventId);
+        log.info("Получение запросов на участие в событии с ID: {} пользователем с ID: {}", eventId, userId);
         return eventService.getRequestsOfEvent(userId, eventId);
     }
 
     @PatchMapping("/{eventId}/requests")
     public EventRequestStatusUpdateResult patchRequestsStatusOfEvent(
-            @PathVariable
-            @Positive Long userId,
-            @PathVariable
-            @Positive Long eventId,
-            @RequestBody
-            @NotNull(message = "Данные для обновления события не могут быть null")
-            @Valid EventRequestStatusUpdateRequest dto
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId,
+            @RequestBody @NotNull @Valid EventRequestStatusUpdateRequest dto
     ) {
-        log.info("Обновление пользователем с ID: {} статусов запросов на участие в созданном им событии с ID: {}. ",
-                userId, eventId);
+        log.info("Обновление статусов запросов на участие в событии с ID: {} пользователем с ID: {}", eventId, userId);
         return eventService.patchRequestsStatusOfEvent(userId, eventId, dto);
     }
-
 }

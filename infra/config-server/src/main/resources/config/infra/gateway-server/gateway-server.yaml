@@ -5,10 +5,11 @@ spring:
         locator:
           enabled: false
       routes:
-        - id: main_service_route
-          uri: lb://MAIN-SERVICE
+        # ==================== REQUEST SERVICE ====================
+        - id: request_service_route
+          uri: lb://REQUEST-SERVICE
           predicates:
-            - Path=/admin/**,/users/**,/public/**,/compilations/**,/events/**,/categories/**
+            - Path=/users/{userId}/requests/**, /public/events/{eventId}/requests/**, /internal/requests/**
           filters:
             - name: Retry
               args:
@@ -16,10 +17,47 @@ spring:
                 statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
                 methods: GET,POST,PUT,PATCH,DELETE
 
+        # ==================== USER SERVICE ====================
+        - id: user_service_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/admin/users/**, /public/users/**, /internal/users/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,PATCH,DELETE
+
+        # ==================== EVENT SERVICE ====================
+        - id: event_service_route
+          uri: lb://EVENT-SERVICE
+          predicates:
+            - Path=/admin/events/**, /admin/categories/**, /admin/compilations/**, /events/**, /categories/**, /compilations/**, /users/{userId}/events/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,PATCH,DELETE
+
+        # ==================== COMMENT SERVICE ====================
+        - id: comment_service_route
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/admin/comments/**, /events/{eventId}/comments/**, /users/{userId}/comments/**, /internal/comments/**, /comments/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,PATCH,DELETE
+
+        # ==================== STATS SERVICE ====================
         - id: stats_service_route
           uri: lb://STATS-SERVER
           predicates:
-            - Path=/hit,/stats/**
+            - Path=/hit, /stats/**
           filters:
             - name: Retry
               args:

@@ -26,7 +26,7 @@ public class CommentAdminController {
 
     private final CommentService commentService;
 
-    @PatchMapping("{commentId}/status")
+    @PatchMapping("/{commentId}/moderate")  // ✅ Изменить на /moderate
     public CommentResponseDto updateCommentStatus(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentStatusUpdateRequest request

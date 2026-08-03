@@ -8,9 +8,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5433/ewm-event-service
-    username: postgres-ewm-event-service
-    password: password
+    url: jdbc:postgresql://localhost:5435/ewm-event-service
+    username: ewm
+    password: ewm
 
   jpa:
     hibernate:
@@ -20,6 +20,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+        default-page-size: 10
 
 eureka:
   client:

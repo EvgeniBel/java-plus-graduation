@@ -17,4 +17,14 @@ public interface RequestService {
     //    Отмена запроса на событие
     ParticipationRequestDto canceledRequest(Long userId, Long requestId);
 
+    //Получение количества подтвержденных запросов для события
+    Long getConfirmedRequestsCount(Long eventId);
+
+    //Получение запросов для события
+    List<ParticipationRequestDto> getRequestsByEvent(Long eventId);
+
+
+    ParticipationRequestDto updateRequestStatus(Long requestId, String status);
+
+
 }

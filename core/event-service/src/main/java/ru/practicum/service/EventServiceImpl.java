@@ -208,6 +208,8 @@ public class EventServiceImpl implements EventService {
                     "или события в состоянии ожидания модерации.");
         }
 
+        // ❌ УДАЛЯЕМ проверку на REJECTED (она больше не нужна)
+
         // Обновляем поля
         if (dto.getEventDate() != null) {
             LocalDateTime eventDate = LocalDateTime.parse(dto.getEventDate(), Constants.FORMATTER);
@@ -256,9 +258,22 @@ public class EventServiceImpl implements EventService {
         // Обновляем статус
         if (dto.getStateAction() != null) {
             if (dto.getStateAction().equals(UserStateAction.SEND_TO_REVIEW.toString())) {
-                oldEvent.setState(EventState.PENDING);
+                // ✅ ИСПРАВЛЕНО: разрешаем отправку из PENDING, CANCELED (и теперь REJECTED тоже можно)
+                if (oldEvent.getState().equals(EventState.PENDING) ||
+                        oldEvent.getState().equals(EventState.CANCELED)) {
+                    oldEvent.setState(EventState.PENDING);
+                } else {
+                    throw new CreationRulesException("Событие в статусе " + oldEvent.getState() +
+                            " нельзя отправить на модерацию. Доступны статусы: PENDING, CANCELED.");
+                }
             } else if (dto.getStateAction().equals(UserStateAction.CANCEL_REVIEW.toString())) {
-                oldEvent.setState(EventState.CANCELED);
+                // Только PENDING можно отменить
+                if (oldEvent.getState().equals(EventState.PENDING)) {
+                    oldEvent.setState(EventState.CANCELED);
+                } else {
+                    throw new CreationRulesException("Событие в статусе " + oldEvent.getState() +
+                            " нельзя отменить. Доступен статус: PENDING.");
+                }
             }
         }
 
@@ -346,7 +361,11 @@ public class EventServiceImpl implements EventService {
 
         Long participantLimit = event.getParticipantLimit().longValue();
 
+        log.info("participantLimit = {}, approvedRequestsCount = {}",
+                event.getParticipantLimit(), approvedRequestsCount);
         if (participantLimit > 0 && approvedRequestsCount >= participantLimit) {
+            log.warn("Достигнут лимит участников: limit={}, approved={}",
+                    participantLimit, approvedRequestsCount);
             throw new ConflictException("Достигнут лимит участников события");
         }
 
@@ -355,17 +374,26 @@ public class EventServiceImpl implements EventService {
 
         long currentApproved = approvedRequestsCount;
 
+
         for (ParticipationRequestDto request : targetRequests) {
-            if (dto.getStatus() == RequestStatus.REJECTED) {
-                // Отклоняем запрос
-                rejectedRequests.add(request);
-            } else if (currentApproved < participantLimit || participantLimit == 0) {
-                // Подтверждаем запрос
-                approvedRequests.add(request);
-                currentApproved++;
-            } else {
-                // Отклоняем, если лимит достигнут
-                rejectedRequests.add(request);
+            try {
+                if (dto.getStatus() == RequestStatus.REJECTED) {
+                    // Отклоняем запрос через Request Service
+                    requestClient.updateRequestStatus(request.getId(), "REJECTED");
+                    rejectedRequests.add(request);
+                } else if (currentApproved < participantLimit || participantLimit == 0) {
+                    // Подтверждаем запрос через Request Service
+                    requestClient.updateRequestStatus(request.getId(), "CONFIRMED");
+                    approvedRequests.add(request);
+                    currentApproved++;
+                } else {
+                    // Отклоняем, если лимит достигнут
+                    requestClient.updateRequestStatus(request.getId(), "REJECTED");
+                    rejectedRequests.add(request);
+                }
+            } catch (Exception e) {
+                log.error("Ошибка при обновлении статуса запроса {}: {}", request.getId(), e.getMessage());
+                throw new ConflictException("Не удалось обновить статус запроса: " + e.getMessage());
             }
         }
 
@@ -414,16 +442,21 @@ public class EventServiceImpl implements EventService {
 
         // Обработка изменения статуса
         if (dto.getStateAction() != null) {
-            if (dto.getStateAction().equals(AdminStateAction.PUBLISH_EVENT.toString())
-                    && oldEvent.getState().equals(EventState.PENDING)) {
-                oldEvent.setState(EventState.PUBLISHED);
-                oldEvent.setPublishedOn(LocalDateTime.now());
-            } else if (dto.getStateAction().equals(AdminStateAction.REJECT_EVENT.toString())
-                    && !oldEvent.getState().equals(EventState.PUBLISHED)) {
-                oldEvent.setState(EventState.CANCELED);
-            } else {
-                throw new CreationRulesException("Опубликовать можно только событие, ожидающее публикации. " +
-                        "Отклонить можно только событие, которое не опубликовано.");
+            if (dto.getStateAction().equals(AdminStateAction.PUBLISH_EVENT.toString())) {
+                if (oldEvent.getState().equals(EventState.PENDING)) {
+                    oldEvent.setState(EventState.PUBLISHED);
+                    oldEvent.setPublishedOn(LocalDateTime.now());
+                } else {
+                    throw new CreationRulesException("Опубликовать можно только событие, ожидающее публикации. " +
+                            "Текущий статус: " + oldEvent.getState());
+                }
+            } else if (dto.getStateAction().equals(AdminStateAction.REJECT_EVENT.toString())) {
+                if (!oldEvent.getState().equals(EventState.PUBLISHED)) {
+                    oldEvent.setState(EventState.CANCELED);
+                    oldEvent.setPublishedOn(null);
+                } else {
+                    throw new CreationRulesException("Отклонить можно только событие, которое не опубликовано.");
+                }
             }
         }
 
@@ -495,6 +528,19 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getEventsByPublicRequest(PublicEventRequestParam param) {
         log.info("Публичный поиск событий: {}", param);
+
+        if (param.getRangeStart() != null && param.getRangeEnd() != null) {
+            LocalDateTime start = LocalDateTime.parse(param.getRangeStart(), Constants.FORMATTER);
+            LocalDateTime end = LocalDateTime.parse(param.getRangeEnd(), Constants.FORMATTER);
+
+            if (end.isBefore(start)) {
+                throw new ValidationException("rangeEnd должен быть позже rangeStart");
+            }
+
+            if (end.isBefore(LocalDateTime.now())) {
+                throw new ValidationException("rangeEnd должен быть в будущем");
+            }
+        }
 
         Pageable pageable = PageRequest.of(param.getFrom() / param.getSize(), param.getSize());
         List<Event> events = eventRepository.findByPublicRequest(param, pageable);

@@ -12,6 +12,7 @@ import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.exception.ValidationException;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.dto.request.RequestStatus;
@@ -169,4 +170,47 @@ public class RequestServiceImpl implements RequestService {
         log.info("Запрос с id={} отменен", requestId);
         return RequestMapper.toParticipationRequestDto(canceled);
     }
+
+    @Override
+    public Long getConfirmedRequestsCount(Long eventId) {
+        log.info("Получение количества подтвержденных запросов для события {}", eventId);
+        return requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+    }
+
+    @Override
+    public List<ParticipationRequestDto> getRequestsByEvent(Long eventId) {
+        log.info("Получение запросов для события {}", eventId);
+        return requestRepository.findAllByEventId(eventId)
+                .stream()
+                .map(RequestMapper::toParticipationRequestDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public ParticipationRequestDto updateRequestStatus(Long requestId, String status) {
+        log.info("Обновление статуса запроса {} на {}", requestId, status);
+
+        ParticipationRequest request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Запрос с ID=" + requestId + " не найден"));
+
+        RequestStatus newStatus;
+        try {
+            newStatus = RequestStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Недопустимый статус: " + status);
+        }
+
+        // Проверка, что статус можно изменить
+        if (request.getStatus() == RequestStatus.CONFIRMED && newStatus == RequestStatus.REJECTED) {
+            throw new ConflictException("Нельзя отклонить уже подтвержденный запрос");
+        }
+
+        request.setStatus(newStatus);
+        ParticipationRequest updated = requestRepository.save(request);
+        log.info("Статус запроса {} обновлен на {}", requestId, newStatus);
+
+        return RequestMapper.toParticipationRequestDto(updated);
+    }
+
 }

@@ -8,9 +8,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5433/ewm-comment-service
-    username: postgres-ewm-comment-service
-    password: password
+    url: jdbc:postgresql://localhost:5436/ewm-comment-service
+    username: ewm
+    password: ewm
 
   jpa:
     hibernate:

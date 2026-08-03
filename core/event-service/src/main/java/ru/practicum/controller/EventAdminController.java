@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Validated
 public class EventAdminController {
+
     private final EventService eventService;
 
     @GetMapping
@@ -31,39 +32,41 @@ public class EventAdminController {
             @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) String rangeStart,
             @RequestParam(required = false) String rangeEnd,
-            @RequestParam(defaultValue = "0")
-            @PositiveOrZero Integer from,
-            @RequestParam(defaultValue = "10")
-            @Positive Integer size
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size
     ) {
-        log.info("Уровень Admin. Получение списка из {} событий по необходимым параметрам. " +
-                "Пропускаем {} элементов. ", size, from);
+        log.info("Admin запрос на получение событий: users={}, states={}, categories={}, from={}, size={}",
+                users, states, categories, from, size);
 
         List<Long> validUsers = filterValidIds(users);
         List<Long> validCategories = filterValidIds(categories);
 
         AdminEventRequestParam param = AdminEventRequestParam.builder()
                 .users(validUsers)
-                .states(states)
+                .states(states != null && !states.isEmpty() ? states : null)
                 .categories(validCategories)
                 .rangeStart(rangeStart)
                 .rangeEnd(rangeEnd)
                 .from(from)
                 .size(size)
                 .build();
+
         return eventService.getEventsByAdminRequest(param);
     }
 
     @PatchMapping("/{eventId}")
     public EventFullDto patchEventByIdByAdmin(
-            @PathVariable
-            @Positive Long eventId,
-            @RequestBody
-            @NotNull(message = "Уровень Admin. Данные для обновления события не могут быть null")
-            @Valid UpdateEventAdminRequest dto
+            @PathVariable @Positive Long eventId,
+            @RequestBody @NotNull @Valid UpdateEventAdminRequest dto
     ) {
-        log.info("Уровень Admin. Обновление администратором данных события с ID: {}. ", eventId);
+        log.info("Admin обновление события с ID: {}", eventId);
         return eventService.patchEventByIdByAdmin(eventId, dto);
+    }
+
+    @GetMapping("/{eventId}/full")
+    public EventFullDto getEventFull(@PathVariable Long eventId) {
+        log.info("Admin получение полной информации о событии с ID: {}", eventId);
+        return eventService.getEventFull(eventId);
     }
 
     private List<Long> filterValidIds(List<Long> ids) {
@@ -75,5 +78,4 @@ public class EventAdminController {
                 .collect(Collectors.toList());
         return validIds.isEmpty() ? null : validIds;
     }
-
 }

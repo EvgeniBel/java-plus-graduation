@@ -33,7 +33,7 @@ public interface RequestClient {
             @Valid @RequestBody CreateUpdateRequestDto requestDto
     );
 
-    @PutMapping(REQUEST_CANCEL)
+    @PatchMapping(REQUEST_CANCEL)
     ParticipationRequestDto cancelRequest(
             @RequestHeader(USER_ID_HEADER) Long userId,
             @PathVariable("requestId") Long requestId
@@ -42,5 +42,11 @@ public interface RequestClient {
     @GetMapping(REQUESTS_BASE)
     List<ParticipationRequestDto> getUserRequests(
             @RequestHeader(USER_ID_HEADER) Long userId
+    );
+
+    @PatchMapping(REQUEST_STATUS_UPDATE)
+    ParticipationRequestDto updateRequestStatus(
+            @PathVariable("requestId") Long requestId,
+            @RequestParam("status") String status
     );
 }

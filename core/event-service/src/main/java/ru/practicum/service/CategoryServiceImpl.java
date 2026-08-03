@@ -82,7 +82,6 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Получение категорий: from = {}, size = {}", from, size);
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-
         return categoryRepository.findAll(pageable)
                 .stream()
                 .map(CategoryMapper::toCategoryDto)

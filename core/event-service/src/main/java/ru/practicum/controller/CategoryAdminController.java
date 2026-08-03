@@ -11,7 +11,6 @@ import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryRequest;
 import ru.practicum.service.CategoryService;
 
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +30,8 @@ public class CategoryAdminController {
     @PatchMapping("/{catId}")
     public CategoryDto updateCategory(
             @Positive @PathVariable Long catId,
-            @Valid @RequestBody CategoryDto categoryDto) {
+            @Valid @RequestBody CategoryDto categoryDto
+    ) {
         log.info("PATCH /admin/categories/{} - обновление категории: {}", catId, categoryDto);
         return categoryService.updateCategory(catId, categoryDto);
     }

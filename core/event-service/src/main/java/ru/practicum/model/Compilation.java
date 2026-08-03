@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Entity
 @Builder
 @Getter
@@ -18,12 +20,18 @@ public class Compilation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "event_ids", columnDefinition = "TEXT")
-    String eventIds;
-
     @Column(name = "pinned")
     Boolean pinned;
 
     @Column(name = "title")
     String title;
+
+    @ManyToMany
+    @JoinTable(
+            name = "event_compilation",
+            joinColumns = @JoinColumn(name = "compilation_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
+    List<Event> events;
 }
+

@@ -4,8 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import ru.practicum.model.ParticipationRequest;
 import ru.practicum.dto.request.RequestStatus;
+import ru.practicum.model.ParticipationRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +15,6 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
 
     @Query("SELECT r FROM ParticipationRequest r WHERE r.requesterId = :userId")
     List<ParticipationRequest> findAllByUserId(@Param("userId") Long userId);
-
-    @Query("UPDATE ParticipationRequest r SET r.status = :status WHERE r.id = :requestId")
-    int changeState(@Param("requestId") Long requestId, @Param("status") RequestStatus status);
 
     Long countByEventIdAndStatus(Long eventId, RequestStatus status);
 

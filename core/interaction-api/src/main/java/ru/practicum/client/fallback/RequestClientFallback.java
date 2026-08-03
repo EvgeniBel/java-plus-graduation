@@ -29,7 +29,6 @@ public class RequestClientFallback implements RequestClient {
     @Override
     public ParticipationRequestDto createRequest(Long userId, CreateUpdateRequestDto requestDto) {
         log.warn("RequestService недоступен при создании запроса пользователем ID: {}", userId);
-        // ✅ Используем Builder
         return ParticipationRequestDto.builder()
                 .id(-1L)
                 .requester(userId)
@@ -42,7 +41,6 @@ public class RequestClientFallback implements RequestClient {
     @Override
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         log.warn("RequestService недоступен при отмене запроса ID: {} пользователем ID: {}", requestId, userId);
-        // ✅ Используем Builder
         return ParticipationRequestDto.builder()
                 .id(requestId)
                 .requester(userId)
@@ -55,5 +53,17 @@ public class RequestClientFallback implements RequestClient {
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
         log.warn("RequestService недоступен при получении запросов пользователя ID: {}, возвращаем пустой список", userId);
         return new ArrayList<>();
+    }
+
+    @Override
+    public ParticipationRequestDto updateRequestStatus(Long requestId, String status) {
+        log.warn("RequestService недоступен при обновлении статуса запроса ID: {}, статус: {}", requestId, status);
+        return ParticipationRequestDto.builder()
+                .id(requestId)
+                .event(-1L)
+                .requester(-1L)
+                .status(status)
+                .created(LocalDateTime.now().toString())
+                .build();
     }
 }

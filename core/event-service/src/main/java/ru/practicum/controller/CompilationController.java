@@ -24,18 +24,20 @@ public class CompilationController {
             @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
             @PositiveOrZero @RequestParam(defaultValue = "10") Integer size
     ) {
-        return service.getCompilations(GetManyCompilationDto.builder()
+        log.info("GET /compilations - pinned={}, from={}, size={}", pinned, from, size);
+
+        GetManyCompilationDto dto = GetManyCompilationDto.builder()
                 .pinned(pinned)
                 .from(from)
                 .size(size)
-                .build()
-        );
+                .build();
+
+        return service.getCompilations(dto);
     }
 
     @GetMapping("/{compId}")
-    public CompilationDto getCompilationById(
-            @PathVariable Long compId
-    ) {
+    public CompilationDto getCompilationById(@PathVariable Long compId) {
+        log.info("GET /compilations/{}", compId);
         return service.getCompilationById(compId);
     }
 }

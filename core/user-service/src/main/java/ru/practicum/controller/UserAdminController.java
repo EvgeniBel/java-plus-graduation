@@ -48,4 +48,10 @@ public class UserAdminController {
         log.info("DELETE /admin/users/{}", userId);
         userService.deleteUser(userId);
     }
+
+    @GetMapping("/{userId}/exists")
+    public boolean userExists(@Positive @PathVariable Long userId) {
+        log.info("GET /admin/users/{}/exists", userId);
+        return userService.existsUser(userId);
+    }
 }

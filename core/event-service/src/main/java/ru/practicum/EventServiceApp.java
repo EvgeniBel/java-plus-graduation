@@ -8,7 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.retry.annotation.EnableRetry;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "ru.practicum")
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "ru.practicum.client")
 @EnableRetry

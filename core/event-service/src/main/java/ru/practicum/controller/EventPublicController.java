@@ -25,6 +25,7 @@ import java.util.List;
 @Slf4j
 @Validated
 public class EventPublicController {
+
     private final EventService eventService;
     private final StatClient statClient;
 
@@ -35,26 +36,29 @@ public class EventPublicController {
             @RequestParam(required = false) Boolean paid,
             @RequestParam(required = false) String rangeStart,
             @RequestParam(required = false) String rangeEnd,
-            @RequestParam(defaultValue = "false")
-            Boolean onlyAvailable,
-            @RequestParam(required = false)
-            @Pattern(regexp = "EVENT_DATE|VIEWS", message = "Сортировка возможная только по EVENT_DATE или VIEWS.")
-            String sort,
-            @RequestParam(defaultValue = "0")
-            @PositiveOrZero Integer from,
-            @RequestParam(defaultValue = "10")
-            @Positive Integer size,
+            @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(required = false) @Pattern(regexp = "EVENT_DATE|VIEWS",
+                    message = "Сортировка возможна только по EVENT_DATE или VIEWS") String sort,
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size,
             HttpServletRequest request
     ) {
-        log.info("Уровень Public. Получение списка из {} событий по необходимым параметрам. " +
-                "Пропускаем {} элементов. ", size, from);
-        HitDto hitDto = HitDto.builder()
-                .app("ewm-main-service")
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now().format(Constants.FORMATTER))
-                .build();
-        HitDto hitResult = statClient.postHit(hitDto);
+        log.info("Публичный запрос на получение событий: text={}, categories={}, paid={}, sort={}, from={}, size={}",
+                text, categories, paid, sort, from, size);
+
+        // Отправка статистики
+        try {
+            HitDto hitDto = HitDto.builder()
+                    .app("event-service")
+                    .uri(request.getRequestURI())
+                    .ip(request.getRemoteAddr())
+                    .timestamp(LocalDateTime.now().format(Constants.FORMATTER))
+                    .build();
+            statClient.postHit(hitDto);
+        } catch (Exception e) {
+            log.warn("Не удалось отправить статистику: {}", e.getMessage());
+        }
+
         PublicEventRequestParam param = PublicEventRequestParam.builder()
                 .text(text)
                 .categories(categories)
@@ -66,10 +70,8 @@ public class EventPublicController {
                 .from(from)
                 .size(size)
                 .build();
-        List<EventShortDto> result = eventService.getEventsByPublicRequest(param);
-        log.info("Успешный публичный запрос на получение списка событий по фильтрам. " +
-                "В статистику внесена новая запись: {}", hitResult);
-        return result;
+
+        return eventService.getEventsByPublicRequest(param);
     }
 
     @GetMapping("/{eventId}")
@@ -77,18 +79,21 @@ public class EventPublicController {
             @PathVariable @Positive Long eventId,
             HttpServletRequest request
     ) {
-        log.info("Уровень Public. Получение данных о событии с ID: {}. ", eventId);
-        HitDto hitDto = HitDto.builder()
-                .app("ewm-main-service")
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now().format(Constants.FORMATTER))
-                .build();
-        HitDto hitResult = statClient.postHit(hitDto);
-        EventFullDto result = eventService.getEventByIdByPublicRequest(eventId);
-        log.info("Успешный публичный запрос на получение события по ID. " +
-                "В статистику внесена новая запись: {}", hitResult);
-        return result;
-    }
+        log.info("Публичный запрос на получение события с ID: {}", eventId);
 
+        // Отправка статистики
+        try {
+            HitDto hitDto = HitDto.builder()
+                    .app("event-service")
+                    .uri(request.getRequestURI())
+                    .ip(request.getRemoteAddr())
+                    .timestamp(LocalDateTime.now().format(Constants.FORMATTER))
+                    .build();
+            statClient.postHit(hitDto);
+        } catch (Exception e) {
+            log.warn("Не удалось отправить статистику: {}", e.getMessage());
+        }
+
+        return eventService.getEventByIdByPublicRequest(eventId);
+    }
 }
