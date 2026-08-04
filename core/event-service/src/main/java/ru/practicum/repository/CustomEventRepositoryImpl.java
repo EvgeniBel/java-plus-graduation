@@ -1,4 +1,5 @@
 package ru.practicum.repository;
+
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -144,7 +145,6 @@ public class CustomEventRepositoryImpl implements CustomEventRepository {
                     .or(event.description.containsIgnoreCase(param.getText())));
         }
 
-        // ✅ Используем categoryId
         if (param.getCategories() != null && !param.getCategories().isEmpty()) {
             builder.and(event.categoryId.in(param.getCategories()));
         }

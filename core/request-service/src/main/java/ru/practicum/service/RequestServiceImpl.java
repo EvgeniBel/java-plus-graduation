@@ -45,7 +45,7 @@ public class RequestServiceImpl implements RequestService {
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя: {}", e.getMessage());
-            throw new NotFoundException("Пользователь с ID=" + userId + " не найден или сервис недоступен");
+            throw new NotFoundException(String.format("Пользователь с ID=%s не найден или сервис недоступен", userId));
         }
 
         // 2. Проверка события
@@ -53,17 +53,17 @@ public class RequestServiceImpl implements RequestService {
         try {
             event = eventClient.getEventFull(dto.getEventId());
             if (event == null) {
-                throw new NotFoundException("Событие с ID=" + dto.getEventId() + " не найдено");
+                throw new NotFoundException(String.format("Событие с ID=%s не найдено", dto.getEventId()));
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке события: {}", e.getMessage());
-            throw new NotFoundException("Событие с ID=" + dto.getEventId() + " не найдено или сервис недоступен");
+            throw new NotFoundException(String.format("Событие с ID=%s не найдено или сервис недоступен", dto.getEventId()));
         }
 
         // 3. Проверка, что событие опубликовано
         if (event.getState() == null || !"PUBLISHED".equals(event.getState())) {
             log.error("Не удается создать запрос на неопубликованное событие с id={}", dto.getEventId());
-            throw new ConflictException("Событие еще не опубликовано. Текущий статус: " + event.getState());
+            throw new ConflictException(String.format("Событие еще не опубликовано. Текущий статус: %s", event.getState()));
         }
 
         // 4. Проверка, что инициатор не пытается участвовать в своем событии
@@ -198,13 +198,13 @@ public class RequestServiceImpl implements RequestService {
         log.info("Обновление статуса запроса {} на {}", requestId, status);
 
         ParticipationRequest request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Запрос с ID=" + requestId + " не найден"));
+                .orElseThrow(() -> new NotFoundException(String.format("Запрос с ID=%s не найден", requestId)));
 
         RequestStatus newStatus;
         try {
             newStatus = RequestStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ValidationException("Недопустимый статус: " + status);
+            throw new ValidationException(String.format("Недопустимый статус: %s", status));
         }
 
         // Проверка, что статус можно изменить

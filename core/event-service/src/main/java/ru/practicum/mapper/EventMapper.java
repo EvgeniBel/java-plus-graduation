@@ -42,14 +42,6 @@ public class EventMapper {
                 .build();
     }
 
-    /**
-     * Преобразование Event в EventFullDto (полная информация)
-     * Используется для:
-     * - getEventById (пользователь получает свое событие)
-     * - getEventByIdByPublicRequest (публичный просмотр события)
-     * - getEventFull (для Feign клиентов)
-     * - patchEventById (обновление события)
-     */
     public EventFullDto eventToFullDto(
             Event event,
             UserShortDto initiator,
@@ -68,23 +60,16 @@ public class EventMapper {
                 .initiator(initiator)
                 .location(LocationMapper.locationToDto(event.getLocation()))
                 .paid(event.getPaid())
-                .participantLimit(event.getParticipantLimit())    // ✅ Есть
+                .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn() != null ? event
                         .getPublishedOn().format(Constants.FORMATTER) : null)
-                .requestModeration(event.getRequestModeration())   // ✅ Есть
+                .requestModeration(event.getRequestModeration())
                 .state(event.getState().toString())
                 .title(event.getTitle())
                 .views(views != null ? views : 0L)
                 .build();
     }
 
-    /**
-     * Преобразование Event в EventShortDto (краткая информация)
-     * Используется для:
-     * - getEventsByPublicRequest (публичный список событий)
-     * - getEventsOfUser (список событий пользователя)
-     * - getEventShort (для Feign клиентов)
-     */
     public EventShortDto eventToShortDto(
             Event event,
             UserShortDto initiator,
@@ -103,7 +88,6 @@ public class EventMapper {
                 .title(event.getTitle())
                 .views(views != null ? views : 0L)
                 .state(event.getState().toString())
-                // ❌ НЕТ participantLimit и requestModeration - это краткая версия
                 .build();
     }
 }

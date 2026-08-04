@@ -29,7 +29,6 @@ import ru.practicum.repository.LocationRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,15 +55,15 @@ public class EventServiceImpl implements EventService {
         try {
             initiator = userClient.getUserShort(userId);
             if (initiator == null) {
-                throw new NotFoundException("Пользователь с ID: " + userId + " не найден.");
+                throw new NotFoundException(String.format("Пользователь с ID: %s не найден.", userId));
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя: {}", e.getMessage());
-            throw new NotFoundException("Пользователь с ID: " + userId + " не найден или сервис недоступен.");
+            throw new NotFoundException(String.format("Пользователь с ID: %s не найден или сервис недоступен.", userId));
         }
 
         Category category = categoryRepository.findById(dto.getCategory())
-                .orElseThrow(() -> new NotFoundException("Категория с ID: " + dto.getCategory() + " не найдена."));
+                .orElseThrow(() -> new NotFoundException(String.format("Категория с ID: %s не найдена.", dto.getCategory())));
 
         Location location = locationRepository.save(LocationMapper.dtoToLocation(dto.getLocation()));
 
@@ -97,11 +96,11 @@ public class EventServiceImpl implements EventService {
         // Проверяем пользователя через Feign
         try {
             if (!userClient.userExists(userId)) {
-                throw new NotFoundException("Пользователь с ID: " + userId + " не найден.");
+                throw new NotFoundException(String.format("Пользователь с ID: %s не найден.", userId));
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя: {}", e.getMessage());
-            throw new NotFoundException("Пользователь с ID: " + userId + " не найден или сервис недоступен.");
+            throw new NotFoundException(String.format("Пользователь с ID: %s не найден или сервис недоступен.", userId));
         }
 
         Pageable pageable = PageRequest.of(from / size, size);
@@ -137,12 +136,12 @@ public class EventServiceImpl implements EventService {
         log.info("Получение события {} пользователем {}", eventId, userId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         // Проверяем, что пользователь является инициатором
         if (!event.getInitiatorId().equals(userId)) {
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
         // Получаем данные
@@ -194,12 +193,12 @@ public class EventServiceImpl implements EventService {
         log.info("Обновление события {} пользователем {}", eventId, userId);
 
         Event oldEvent = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         // Проверяем, что пользователь является инициатором
         if (!oldEvent.getInitiatorId().equals(userId)) {
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
         // Проверяем статус
@@ -207,8 +206,6 @@ public class EventServiceImpl implements EventService {
             throw new CreationRulesException("Изменить можно только отмененные события " +
                     "или события в состоянии ожидания модерации.");
         }
-
-        // ❌ УДАЛЯЕМ проверку на REJECTED (она больше не нужна)
 
         // Обновляем поля
         if (dto.getEventDate() != null) {
@@ -222,7 +219,7 @@ public class EventServiceImpl implements EventService {
 
         if (dto.getCategory() != null) {
             Category category = categoryRepository.findById(dto.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Категория с ID: " + dto.getCategory() + " не найдена."));
+                    .orElseThrow(() -> new NotFoundException(String.format("Категория с ID: %s не найдена.", dto.getCategory())));
             oldEvent.setCategoryId(category.getId());
         }
 
@@ -258,21 +255,21 @@ public class EventServiceImpl implements EventService {
         // Обновляем статус
         if (dto.getStateAction() != null) {
             if (dto.getStateAction().equals(UserStateAction.SEND_TO_REVIEW.toString())) {
-                // ✅ ИСПРАВЛЕНО: разрешаем отправку из PENDING, CANCELED (и теперь REJECTED тоже можно)
                 if (oldEvent.getState().equals(EventState.PENDING) ||
                         oldEvent.getState().equals(EventState.CANCELED)) {
                     oldEvent.setState(EventState.PENDING);
                 } else {
-                    throw new CreationRulesException("Событие в статусе " + oldEvent.getState() +
-                            " нельзя отправить на модерацию. Доступны статусы: PENDING, CANCELED.");
+                    throw new CreationRulesException(
+                            String.format("Событие в статусе %s нельзя отправить на модерацию." +
+                                    " Доступны статусы: PENDING, CANCELED.", oldEvent.getState()));
                 }
             } else if (dto.getStateAction().equals(UserStateAction.CANCEL_REVIEW.toString())) {
                 // Только PENDING можно отменить
                 if (oldEvent.getState().equals(EventState.PENDING)) {
                     oldEvent.setState(EventState.CANCELED);
                 } else {
-                    throw new CreationRulesException("Событие в статусе " + oldEvent.getState() +
-                            " нельзя отменить. Доступен статус: PENDING.");
+                    throw new CreationRulesException(String.format("Событие в статусе %s нельзя отменить. " +
+                            "Доступен статус: PENDING.", oldEvent.getState()));
                 }
             }
         }
@@ -294,11 +291,11 @@ public class EventServiceImpl implements EventService {
         log.info("Получение запросов на участие в событии {} пользователем {}", eventId, userId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         if (!event.getInitiatorId().equals(userId)) {
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
         // Получаем запросы через Feign клиент
@@ -317,11 +314,11 @@ public class EventServiceImpl implements EventService {
         log.info("Обновление статусов запросов для события {} пользователем {}", eventId, userId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         if (!event.getInitiatorId().equals(userId)) {
-            throw new NotFoundException("Пользователь с ID: " + userId +
-                    " не является инициатором события с ID: " + eventId);
+            throw new NotFoundException(
+                    String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
         List<ParticipationRequestDto> requests;
@@ -427,7 +424,7 @@ public class EventServiceImpl implements EventService {
         log.info("Admin обновление события {}", eventId);
 
         Event oldEvent = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         // Обработка изменения статуса
         if (dto.getStateAction() != null) {
@@ -436,8 +433,8 @@ public class EventServiceImpl implements EventService {
                     oldEvent.setState(EventState.PUBLISHED);
                     oldEvent.setPublishedOn(LocalDateTime.now());
                 } else {
-                    throw new CreationRulesException("Опубликовать можно только событие, ожидающее публикации. " +
-                            "Текущий статус: " + oldEvent.getState());
+                    throw new CreationRulesException(
+                            String.format("Опубликовать можно только событие, ожидающее публикации. Текущий статус: %s", oldEvent.getState()));
                 }
             } else if (dto.getStateAction().equals(AdminStateAction.REJECT_EVENT.toString())) {
                 if (!oldEvent.getState().equals(EventState.PUBLISHED)) {
@@ -462,7 +459,7 @@ public class EventServiceImpl implements EventService {
         // Обновление категории
         if (dto.getCategory() != null) {
             Category category = categoryRepository.findById(dto.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Категория с ID: " + dto.getCategory() + " не найдена."));
+                    .orElseThrow(() -> new NotFoundException(String.format("Категория с ID: %s не найдена.", dto.getCategory())));
             oldEvent.setCategoryId(category.getId());
         }
 
@@ -577,7 +574,7 @@ public class EventServiceImpl implements EventService {
         log.info("Публичное получение события {}", eventId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new NotFoundException("Можно получить данные только опубликованного события.");
@@ -603,7 +600,7 @@ public class EventServiceImpl implements EventService {
         log.info("Получение полной информации о событии {}", eventId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: 5s не найдено.", eventId)));
 
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
@@ -618,7 +615,7 @@ public class EventServiceImpl implements EventService {
         log.info("Получение краткой информации о событии {}", eventId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
@@ -631,7 +628,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public String getEventStatus(Long eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID: " + eventId + " не найдено."));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
         return event.getState().toString();
     }
 

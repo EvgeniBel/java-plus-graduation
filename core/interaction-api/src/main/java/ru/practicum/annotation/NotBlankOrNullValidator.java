@@ -12,5 +12,4 @@ public class NotBlankOrNullValidator implements ConstraintValidator<NotBlankOrNu
         }
         return !value.trim().isEmpty();
     }
-
 }

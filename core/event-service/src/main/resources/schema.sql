@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS events
     request_moderation BOOLEAN                                 NOT NULL DEFAULT TRUE,
     state              VARCHAR(12)                             NOT NULL DEFAULT 'PENDING',
     title              VARCHAR(120)                            NOT NULL,
-    -- ✅ Добавлен REJECTED
+
     CONSTRAINT chk_event_state CHECK (state IN ('PENDING', 'PUBLISHED', 'CANCELED', 'REJECTED'))
 );
 

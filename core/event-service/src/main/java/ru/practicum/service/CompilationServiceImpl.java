@@ -39,7 +39,6 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Создание подборки: title={}, events={}, pinned={}",
                 dto.getTitle(), dto.getEvents(), dto.getPinned());
 
-        // Создаем подборку
         Compilation compilation = CompilationMapper.toEntity(dto);
 
         // Если есть события - загружаем их и добавляем в подборку
@@ -65,7 +64,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Обновление подборки с id: {}", dto.getId());
 
         Compilation compilation = compilationRepository.findById(dto.getId())
-                .orElseThrow(() -> new NotFoundException("Подборка с id=" + dto.getId() + " не найдена"));
+                .orElseThrow(() -> new NotFoundException(String.format("Подборка с id=%s не найдена", dto.getId())));
 
         // Обновляем основные поля
         CompilationMapper.updateEntity(compilation, dto);
@@ -92,7 +91,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Удаление подборки с id: {}", compId);
 
         if (!compilationRepository.existsById(compId)) {
-            throw new NotFoundException("Подборка с id=" + compId + " не найдена");
+            throw new NotFoundException(String.format("Подборка с id=%s не найдена", compId));
         }
         compilationRepository.deleteById(compId);
         log.info("Подборка удалена, id: {}", compId);
@@ -150,7 +149,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         Compilation compilation = compilationRepository.findByIdWithEvents(compId);
         if (compilation == null) {
-            throw new NotFoundException("Подборка с id=" + compId + " не найдена");
+            throw new NotFoundException(String.format("Подборка с id=%s не найдена", compId));
         }
 
         List<Long> eventIds = CompilationMapper.getEventIds(compilation);

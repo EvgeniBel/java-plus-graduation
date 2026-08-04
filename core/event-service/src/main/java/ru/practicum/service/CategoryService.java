@@ -1,7 +1,5 @@
 package ru.practicum.service;
 
-
-
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryRequest;
 

@@ -25,7 +25,6 @@ public class RequestMapper {
                 .build();
     }
 
-    // Преобразование в dto
     public ParticipationRequestDto toParticipationRequestDto(ParticipationRequest request) {
         return ParticipationRequestDto.builder()
                 .id(request.getId())

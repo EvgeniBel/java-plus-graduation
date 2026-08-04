@@ -8,12 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
-import ru.practicum.constants.Constants;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.CommentStatusUpdateRequest;
 import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.comment.UpdateCommentUserRequest;
-import ru.practicum.dto.event.EventFullDto;  // ✅ Используем EventFullDto
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.CommentException;
 import ru.practicum.exception.NotFoundException;
@@ -48,23 +47,23 @@ public class CommentServiceImpl implements CommentService {
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя {}: {}", userId, e.getMessage());
-            throw new NotFoundException("Пользователь с ID: " + userId + " не найден или сервис недоступен.");
+            throw new NotFoundException(String.format("Пользователь с ID: %s не найден или сервис недоступен.", userId));
         }
 
         EventFullDto event;
         try {
             event = eventClient.getEventFull(eventId);
             if (event == null) {
-                throw new NotFoundException("Событие с ID: " + eventId + " не найдено.");
+                throw new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId));
             }
 
             // Проверяем статус события - только PUBLISHED можно комментировать
             if (event.getState() == null || !"PUBLISHED".equals(event.getState())) {
-                throw new ValidationException("Комментарии можно оставлять только к опубликованным событиям. Текущий статус: " + event.getState());
+                throw new ValidationException(String.format("Комментарии можно оставлять только к опубликованным событиям. Текущий статус: %s", event.getState()));
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке событии {}: {}", eventId, e.getMessage());
-            throw new NotFoundException("Событие с ID: " + eventId + " не найдено или сервис недоступен.");
+            throw new NotFoundException(String.format("Событие с ID: %s не найдено или сервис недоступен.", eventId));
         }
 
         // Создаем комментарий

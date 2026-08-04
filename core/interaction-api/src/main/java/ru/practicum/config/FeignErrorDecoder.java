@@ -18,11 +18,11 @@ public class FeignErrorDecoder implements ErrorDecoder {
         log.warn("Feign ошибка при вызове {}: {}", methodKey, response.status());
 
         if (status.is4xxClientError()) {
-            return new ResponseStatusException(status,
-                    "Client error: " + response.reason() + " (method: " + methodKey + ")");
+            return new ResponseStatusException(status, String.format(
+                    "Client error: %s (method: %s)", response.reason(), methodKey));
         } else if (status.is5xxServerError()) {
-            return new ResponseStatusException(status,
-                    "Server error: " + response.reason() + " (method: " + methodKey + ")");
+            return new ResponseStatusException(status, String.format(
+                    "Server error: %s  (method: %s)", response.reason(), methodKey));
         }
 
         return defaultDecoder.decode(methodKey, response);
