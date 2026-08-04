@@ -16,10 +16,12 @@ import ru.practicum.service.UserService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.USERS_BASE;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/users")
+@RequestMapping(USERS_BASE)
 @Validated
 public class UserAdminController {
 

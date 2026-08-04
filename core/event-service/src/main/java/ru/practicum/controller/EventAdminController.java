@@ -16,8 +16,10 @@ import ru.practicum.service.EventService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.constants.ApiConstants.EVENTS_BASE;
+
 @RestController
-@RequestMapping("/admin/events")
+@RequestMapping(EVENTS_BASE)
 @RequiredArgsConstructor
 @Slf4j
 @Validated

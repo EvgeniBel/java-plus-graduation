@@ -10,9 +10,11 @@ import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.comment.UpdateCommentUserRequest;
 import ru.practicum.service.CommentService;
 
+import static ru.practicum.constants.ApiConstants.COMMENTS_BY_USER;
+
 
 @RestController
-@RequestMapping("/users/{userId}/comments")
+@RequestMapping(COMMENTS_BY_USER)
 @RequiredArgsConstructor
 @Slf4j
 @Validated

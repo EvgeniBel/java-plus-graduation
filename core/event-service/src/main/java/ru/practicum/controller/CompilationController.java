@@ -10,10 +10,12 @@ import ru.practicum.service.CompilationService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.COMPILATION_PREFIX;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/compilations")
+@RequestMapping(COMPILATION_PREFIX)
 public class CompilationController {
 
     private final CompilationService service;

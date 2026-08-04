@@ -11,10 +11,12 @@ import ru.practicum.dto.compilation.CreateCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationDto;
 import ru.practicum.service.CompilationService;
 
+import static ru.practicum.constants.ApiConstants.COMPILATIONS_BASE;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/compilations")
+@RequestMapping(COMPILATIONS_BASE)
 public class CompilationAdminController {
 
     private final CompilationService service;

@@ -6,16 +6,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
-import ru.practicum.dto.event.EventFullDto;  // ✅ Используем EventFullDto
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.request.CreateUpdateRequestDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.repository.RequestRepository;
 
 import java.time.LocalDateTime;
@@ -36,6 +36,7 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto createRequest(Long userId, CreateUpdateRequestDto dto) {
         log.info("Создание запроса: userId={}, eventId={}", userId, dto.getEventId());
 
+        // 1. Проверка пользователя
         UserShortDto requester;
         try {
             requester = userClient.getUserShort(userId);
@@ -47,6 +48,7 @@ public class RequestServiceImpl implements RequestService {
             throw new NotFoundException("Пользователь с ID=" + userId + " не найден или сервис недоступен");
         }
 
+        // 2. Проверка события
         EventFullDto event;
         try {
             event = eventClient.getEventFull(dto.getEventId());
@@ -58,20 +60,20 @@ public class RequestServiceImpl implements RequestService {
             throw new NotFoundException("Событие с ID=" + dto.getEventId() + " не найдено или сервис недоступен");
         }
 
-        // Проверка, что событие опубликовано
+        // 3. Проверка, что событие опубликовано
         if (event.getState() == null || !"PUBLISHED".equals(event.getState())) {
             log.error("Не удается создать запрос на неопубликованное событие с id={}", dto.getEventId());
             throw new ConflictException("Событие еще не опубликовано. Текущий статус: " + event.getState());
         }
 
-        // Проверка, что инициатор не пытается участвовать в своем событии
+        // 4. Проверка, что инициатор не пытается участвовать в своем событии
         if (event.getInitiator() != null && event.getInitiator().getId().equals(userId)) {
             log.error("Инициатор не может участвовать в собственном мероприятии. eventId={}, userId={}",
                     dto.getEventId(), userId);
             throw new ConflictException("Инициатор не может участвовать в собственном мероприятии");
         }
 
-        // Проверка, что пользователь уже не создавал запрос
+        // 5. Проверка, что пользователь уже не создавал запрос
         Optional<ParticipationRequest> existingRequest =
                 requestRepository.findByRequesterIdAndEventId(userId, dto.getEventId());
 
@@ -80,11 +82,15 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Запрос пользователя на это событие уже существует");
         }
 
+        // 6. Проверка лимита участников
         Long approvedRequestsCount = requestRepository.countByEventIdAndStatus(
                 dto.getEventId(), RequestStatus.CONFIRMED);
 
         Integer participantLimit = event.getParticipantLimit() != null ? event.getParticipantLimit() : 0;
         Boolean requestModeration = event.getRequestModeration() != null ? event.getRequestModeration() : true;
+
+        log.info("participantLimit = {}, requestModeration = {}, approvedRequestsCount = {}",
+                participantLimit, requestModeration, approvedRequestsCount);
 
         if (participantLimit > 0 && approvedRequestsCount >= participantLimit) {
             log.error("Достигнут лимит участников для event {}. Limit: {}, CONFIRMED: {}",
@@ -92,7 +98,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Достигнут лимит участников");
         }
 
-        // Определение статуса запроса
+        // 7. Определение статуса запроса
         RequestStatus initialStatus;
         if (participantLimit == 0) {
             initialStatus = RequestStatus.CONFIRMED;
@@ -102,7 +108,7 @@ public class RequestServiceImpl implements RequestService {
             initialStatus = RequestStatus.PENDING;
         }
 
-        // Создаем запрос
+        // 8. Создание запроса
         ParticipationRequest request = RequestMapper.toEntity(
                 LocalDateTime.now(),
                 dto.getEventId(),

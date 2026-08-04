@@ -16,9 +16,11 @@ import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.CommentStatusUpdateRequest;
 import ru.practicum.service.CommentService;
 
+import static ru.practicum.constants.ApiConstants.COMMENTS_BASE;
+
 
 @RestController
-@RequestMapping("/admin/comments")
+@RequestMapping(COMMENTS_BASE)
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -26,7 +28,7 @@ public class CommentAdminController {
 
     private final CommentService commentService;
 
-    @PatchMapping("/{commentId}/moderate")  // ✅ Изменить на /moderate
+    @PatchMapping("/{commentId}/moderate")
     public CommentResponseDto updateCommentStatus(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentStatusUpdateRequest request

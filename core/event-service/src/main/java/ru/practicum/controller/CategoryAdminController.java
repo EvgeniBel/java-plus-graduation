@@ -11,12 +11,15 @@ import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryRequest;
 import ru.practicum.service.CategoryService;
 
+import static ru.practicum.constants.ApiConstants.CATEGORIES_BASE;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/categories")
+@RequestMapping(CATEGORIES_BASE)
 @Validated
-public class CategoryAdminController {
+public class
+CategoryAdminController {
 
     private final CategoryService categoryService;
 

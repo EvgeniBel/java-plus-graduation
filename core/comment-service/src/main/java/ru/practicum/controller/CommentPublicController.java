@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.service.CommentService;
 
+import static ru.practicum.constants.ApiConstants.COMMENTS_BY_EVENT;
+
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/events/{eventId}/comments")
+@RequestMapping(COMMENTS_BY_EVENT)
 public class CommentPublicController {
 
     private final CommentService commentService;

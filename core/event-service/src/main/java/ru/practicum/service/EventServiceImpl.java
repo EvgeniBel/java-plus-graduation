@@ -324,7 +324,6 @@ public class EventServiceImpl implements EventService {
                     " не является инициатором события с ID: " + eventId);
         }
 
-        // Получаем запросы через Feign клиент
         List<ParticipationRequestDto> requests;
         try {
             requests = requestClient.getRequestsByEvent(eventId);
@@ -333,7 +332,6 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Не удалось получить запросы на участие.");
         }
 
-        // Фильтруем запросы по ID
         List<ParticipationRequestDto> targetRequests = requests.stream()
                 .filter(r -> dto.getRequestIds().contains(r.getId()))
                 .toList();
@@ -342,7 +340,6 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Некоторые запросы не найдены.");
         }
 
-        // Проверяем, что все запросы в статусе PENDING
         for (ParticipationRequestDto request : targetRequests) {
             if (!"PENDING".equals(request.getStatus())) {
                 throw new CreationRulesException("Статус можно изменить только у заявок, " +
@@ -350,7 +347,6 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Получаем количество подтвержденных запросов
         Long approvedRequestsCount;
         try {
             approvedRequestsCount = requestClient.getConfirmedRequestsCount(eventId);
@@ -361,11 +357,7 @@ public class EventServiceImpl implements EventService {
 
         Long participantLimit = event.getParticipantLimit().longValue();
 
-        log.info("participantLimit = {}, approvedRequestsCount = {}",
-                event.getParticipantLimit(), approvedRequestsCount);
         if (participantLimit > 0 && approvedRequestsCount >= participantLimit) {
-            log.warn("Достигнут лимит участников: limit={}, approved={}",
-                    participantLimit, approvedRequestsCount);
             throw new ConflictException("Достигнут лимит участников события");
         }
 
@@ -374,22 +366,19 @@ public class EventServiceImpl implements EventService {
 
         long currentApproved = approvedRequestsCount;
 
-
         for (ParticipationRequestDto request : targetRequests) {
             try {
+                ParticipationRequestDto updatedRequest;  // ← Сохраняем результат
                 if (dto.getStatus() == RequestStatus.REJECTED) {
-                    // Отклоняем запрос через Request Service
-                    requestClient.updateRequestStatus(request.getId(), "REJECTED");
-                    rejectedRequests.add(request);
+                    updatedRequest = requestClient.updateRequestStatus(request.getId(), "REJECTED");
+                    rejectedRequests.add(updatedRequest);  // ← Обновлённый объект
                 } else if (currentApproved < participantLimit || participantLimit == 0) {
-                    // Подтверждаем запрос через Request Service
-                    requestClient.updateRequestStatus(request.getId(), "CONFIRMED");
-                    approvedRequests.add(request);
+                    updatedRequest = requestClient.updateRequestStatus(request.getId(), "CONFIRMED");
+                    approvedRequests.add(updatedRequest);  // ← Обновлённый объект
                     currentApproved++;
                 } else {
-                    // Отклоняем, если лимит достигнут
-                    requestClient.updateRequestStatus(request.getId(), "REJECTED");
-                    rejectedRequests.add(request);
+                    updatedRequest = requestClient.updateRequestStatus(request.getId(), "REJECTED");
+                    rejectedRequests.add(updatedRequest);  // ← Обновлённый объект
                 }
             } catch (Exception e) {
                 log.error("Ошибка при обновлении статуса запроса {}: {}", request.getId(), e.getMessage());

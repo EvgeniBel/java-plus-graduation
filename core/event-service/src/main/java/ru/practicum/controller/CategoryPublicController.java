@@ -8,10 +8,12 @@ import ru.practicum.service.CategoryService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.CATEGORY_PREFIX;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/categories")
+@RequestMapping(CATEGORY_PREFIX)
 public class CategoryPublicController {
 
     private final CategoryService categoryService;

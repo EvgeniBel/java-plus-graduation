@@ -6,12 +6,13 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.service.RequestService;
 
-import static ru.practicum.constants.ApiConstants.REQUEST_STATUS_UPDATE;
+import static ru.practicum.constants.ApiConstants.REQUESTS_INTERNAL;
+
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal/requests")
+@RequestMapping(REQUESTS_INTERNAL)
 public class RequestInternalController {
 
     private final RequestService requestService;
@@ -21,7 +22,7 @@ public class RequestInternalController {
             @PathVariable Long requestId,
             @RequestParam String status
     ) {
-        log.info("PATCH /internal/requests/{}/status?status={}", requestId, status);
+        log.info("Post /internal/requests/{}/status?status={}", requestId, status);
         return requestService.updateRequestStatus(requestId, status);
     }
 }

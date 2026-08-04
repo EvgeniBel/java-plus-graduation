@@ -8,10 +8,12 @@ import ru.practicum.service.UserService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.USERS_PUBLIC;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/public/users")
+@RequestMapping(USERS_PUBLIC)
 public class UserPublicController {
 
     private final UserService userService;

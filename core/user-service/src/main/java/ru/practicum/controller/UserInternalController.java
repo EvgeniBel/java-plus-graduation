@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.service.UserService;
 
+import static ru.practicum.constants.ApiConstants.USERS_INTERNAL;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal/users")
+@RequestMapping(USERS_INTERNAL)
 public class UserInternalController {
 
     private final UserService userService;

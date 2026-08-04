@@ -2,16 +2,21 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.service.RequestService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.REQUESTS_BY_EVENT;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/public/events/{eventId}/requests")
+@RequestMapping(REQUESTS_BY_EVENT)
 public class RequestPublicController {
 
     private final RequestService requestService;

@@ -15,8 +15,10 @@ import ru.practicum.service.EventService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.EVENTS_USER;
+
 @RestController
-@RequestMapping("/users/{userId}/events")
+@RequestMapping(EVENTS_USER)
 @RequiredArgsConstructor
 @Slf4j
 @Validated

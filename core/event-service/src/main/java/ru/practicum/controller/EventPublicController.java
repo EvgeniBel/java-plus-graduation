@@ -19,8 +19,10 @@ import ru.practicum.service.EventService;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.EVENTS_PREFIX;
+
 @RestController
-@RequestMapping("/events")
+@RequestMapping(EVENTS_PREFIX)
 @RequiredArgsConstructor
 @Slf4j
 @Validated

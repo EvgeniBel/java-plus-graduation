@@ -10,10 +10,12 @@ import ru.practicum.service.RequestService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.REQUESTS_BASE;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users/{userId}/requests")
+@RequestMapping(REQUESTS_BASE)
 public class RequestPrivateController {
 
     private final RequestService requestService;

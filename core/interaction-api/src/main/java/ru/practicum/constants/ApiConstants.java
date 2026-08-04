@@ -10,6 +10,9 @@ public final class ApiConstants {
     public static final String USER_PREFIX = API_PREFIX + "/users";
     public static final String PUBLIC_PREFIX = API_PREFIX + "/public";
     public static final String INTERNAL_PREFIX = API_PREFIX + "/internal";
+    public static final String CATEGORY_PREFIX = API_PREFIX + "/categories";
+    public static final String COMPILATION_PREFIX = API_PREFIX + "/compilations";
+    public static final String EVENTS_PREFIX = API_PREFIX +"/events";
 
     // ==================== ПАРАМЕТРЫ ====================
     public static final String USER_ID_HEADER = "X-User-Id";
@@ -36,10 +39,10 @@ public final class ApiConstants {
     public static final String REQUEST_BY_ID_PARAM = "requestId";
 
     // ==================== ПОЛЬЗОВАТЕЛИ ====================
-    public static final String USERS_BASE = ADMIN_PREFIX + "/users";
+    public static final String USERS_BASE = ADMIN_PREFIX + USER_PREFIX;
     public static final String USER_BY_ID = USERS_BASE + "/" + USER_ID_PATH;
-    public static final String USERS_PUBLIC = PUBLIC_PREFIX + "/users";
-    public static final String USERS_INTERNAL = INTERNAL_PREFIX + "/users";
+    public static final String USERS_PUBLIC = PUBLIC_PREFIX + USER_PREFIX;
+    public static final String USERS_INTERNAL = INTERNAL_PREFIX + USER_PREFIX;
 
     public static final String USER_EXISTS = USER_BY_ID + "/exists";
     public static final String USER_EXISTS_INTERNAL = USERS_INTERNAL + "/" + USER_ID_PATH + "/exists";
