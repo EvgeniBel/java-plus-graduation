@@ -208,8 +208,8 @@ spring:
 
 **Контракты и схемы взаимодействия доступны по адресу:**
 
-- **[Интерфейс основного приложения (EWM)](https://github.com/EvgeniBel/java-plus-graduation/tree/main/postman/ewm-main-service-spec.json)**
-- **[Интерфейс модуля статистики](https://github.com/EvgeniBel/java-plus-graduation/tree/main/postman/ewm-stats-service-spec.json)**
+- **[Интерфейс основного приложения (EWM)](https://github.com/EvgeniBel/java-plus-graduation/blob/microservices/postman/ewm-main-service-spec.json)**
+- **[Интерфейс модуля статистики](https://github.com/EvgeniBel/java-plus-graduation/blob/microservices/postman/ewm-stats-service-spec.json)**
 
 ### Основные эндпоинты
 
