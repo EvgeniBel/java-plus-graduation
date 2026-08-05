@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: event-service
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+      fail-fast: true
+      retry:
+        max-attempts: 6
+        initial-interval: 1000
+        multiplier: 1.1
+
+# ==================== RESILIENCE4J КОНФИГУРАЦИЯ ====================
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        max-wait-duration-in-half-open-state: 10s
+        wait-duration-in-open-state: 60s
+        minimum-number-of-calls: 5
+        register-health-indicator: true
+        event-consumer-buffer-size: 10
+        ignore-exceptions:
+          - ru.practicum.exception.NotFoundException
+          - ru.practicum.exception.ValidationException
+    instances:
+      userService:
+        base-config: default
+      requestService:
+        base-config: default
+      eventService:
+        base-config: default
+
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.ResourceAccessException
+          - feign.RetryableException
+    instances:
+      userService:
+        base-config: default
+        max-attempts: 5
+        wait-duration: 2s
+      requestService:
+        base-config: default
+        max-attempts: 3
+        wait-duration: 1s
+
+  bulkhead:
+    instances:
+      userService:
+        max-concurrent-calls: 10
+        max-wait-duration: 10ms
+      requestService:
+        max-concurrent-calls: 10
+        max-wait-duration: 10ms
+
+  timelimiter:
+    instances:
+      userService:
+        timeout-duration: 5s
+      requestService:
+        timeout-duration: 5s
