@@ -41,7 +41,7 @@ public class RequestServiceImpl implements RequestService {
         try {
             requester = userClient.getUserShort(userId);
             if (requester == null) {
-                throw new NotFoundException("Пользователь с ID=" + userId + " не найден");
+                throw new NotFoundException(String.format("Пользователь с ID=%s не найден", userId));
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя: {}", e.getMessage());

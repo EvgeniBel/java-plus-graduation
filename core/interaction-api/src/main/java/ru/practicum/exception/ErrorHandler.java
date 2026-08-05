@@ -27,7 +27,7 @@ public class ErrorHandler {
         List<String> errors = ex.getBindingResult().getAllErrors().stream()
                 .map(error -> {
                     if (error instanceof FieldError fieldError) {
-                        return "Field: " + fieldError.getField() + ". Error: " + error.getDefaultMessage();
+                        return String.format("Field: %s. Error: %s", fieldError.getField(), error.getDefaultMessage());
                     }
                     return error.getDefaultMessage();
                 })

@@ -379,7 +379,7 @@ public class EventServiceImpl implements EventService {
                 }
             } catch (Exception e) {
                 log.error("Ошибка при обновлении статуса запроса {}: {}", request.getId(), e.getMessage());
-                throw new ConflictException("Не удалось обновить статус запроса: " + e.getMessage());
+                throw new ConflictException(String.format("Не удалось обновить статус запроса: %s", e.getMessage()));
             }
         }
 
@@ -651,8 +651,8 @@ public class EventServiceImpl implements EventService {
     // Метод для получения количества запросов с Fallback
     private Long getConfirmedRequestsCount(Event event) {
         try {
-            log.info("Запрос количества подтверждённых запросов для события {} по пути: {}",
-                    event.getId(), "/public/events/" + event.getId() + "/requests/count");
+            log.info("Запрос количества подтверждённых запросов для события {} по пути: /public/events/{}/requests/count",
+                    event.getId(), event.getId());
             Long count = requestClient.getConfirmedRequestsCount(event.getId());
             log.info("Получено: {} для события {}", count, event.getId());
             return count != null ? count : 0L;
