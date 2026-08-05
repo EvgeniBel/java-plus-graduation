@@ -21,7 +21,7 @@ public interface CommentClient {
 
     @PutMapping(COMMENT_MODERATE)
     CommentResponseDto moderateComment(
-            @PathVariable(COMMENT_MODERATE_PARAM) Long commentId,
+            @PathVariable(COMMENT_BY_ID_PARAM) Long commentId,
             @Valid @RequestBody CommentStatusUpdateRequest request
     );
 
@@ -44,7 +44,7 @@ public interface CommentClient {
     // ==================== ПУБЛИЧНЫЕ ====================
     @GetMapping(COMMENTS_BY_EVENT)
     List<CommentResponseDto> getCommentsByEvent(
-            @PathVariable(COMMENTS_BY_EVENT_PARAM) Long eventId,
+            @PathVariable(EVENT_BY_ID_PARAM) Long eventId,
             @RequestParam(value = FROM_PARAM, defaultValue = DEFAULT_FROM) Integer from,
             @RequestParam(value = SIZE_PARAM, defaultValue = DEFAULT_SIZE) Integer size
     );
@@ -56,18 +56,18 @@ public interface CommentClient {
     @PostMapping(COMMENTS_USER)
     CommentResponseDto createComment(
             @RequestHeader(USER_ID_HEADER) Long userId,
-            @RequestParam("eventId") Long eventId,
+            @RequestParam(EVENT_BY_ID_PARAM) Long eventId,
             @Valid @RequestBody NewCommentDto dto
     );
 
-    @PutMapping(COMMENTS_USER + "/{commentId}")
+    @PutMapping(COMMENTS_ID_BY_USER_PATH)
     CommentResponseDto updateComment(
             @PathVariable(COMMENT_BY_ID_PARAM) Long commentId,
             @RequestHeader(USER_ID_HEADER) Long userId,
             @Valid @RequestBody UpdateCommentUserRequest request
     );
 
-    @DeleteMapping(COMMENTS_USER + "/{commentId}")
+    @DeleteMapping(COMMENTS_ID_BY_USER_PATH)
     void deleteUserComment(
             @PathVariable(COMMENT_BY_ID_PARAM) Long commentId,
             @RequestHeader(USER_ID_HEADER) Long userId
@@ -75,7 +75,7 @@ public interface CommentClient {
 
     @GetMapping(COMMENTS_BY_USER)
     List<CommentResponseDto> getCommentsByUser(
-            @PathVariable(COMMENTS_BY_USER_PARAM) Long userId,
+            @PathVariable(USER_BY_ID_PARAM) Long userId,
             @RequestParam(value = FROM_PARAM, defaultValue = DEFAULT_FROM) Integer from,
             @RequestParam(value = SIZE_PARAM, defaultValue = DEFAULT_SIZE) Integer size
     );

@@ -15,7 +15,7 @@ import ru.practicum.service.EventService;
 
 import java.util.List;
 
-import static ru.practicum.constants.ApiConstants.EVENTS_USER;
+import static ru.practicum.constants.ApiConstants.*;
 
 @RestController
 @RequestMapping(EVENTS_USER)
@@ -58,7 +58,7 @@ public class EventPrivateController {
         return eventService.getEventsOfUser(userId, from, size);
     }
 
-    @GetMapping("/{eventId}")
+    @GetMapping(EVENT_ID_PATH)
     public EventFullDto getEventById(
             @PathVariable @Positive Long userId,
             @PathVariable @Positive Long eventId
@@ -67,7 +67,7 @@ public class EventPrivateController {
         return eventService.getEventById(userId, eventId);
     }
 
-    @PatchMapping("/{eventId}")
+    @PatchMapping(EVENT_ID_PATH)
     public EventFullDto patchEventById(
             @PathVariable @Positive Long userId,
             @PathVariable @Positive Long eventId,
@@ -77,7 +77,7 @@ public class EventPrivateController {
         return eventService.patchEventById(userId, eventId, dto);
     }
 
-    @GetMapping("/{eventId}/requests")
+    @GetMapping(EVENT_ID_REQUESTS)
     public List<ParticipationRequestDto> getRequestsOfEvent(
             @PathVariable @Positive Long userId,
             @PathVariable @Positive Long eventId
@@ -86,7 +86,7 @@ public class EventPrivateController {
         return eventService.getRequestsOfEvent(userId, eventId);
     }
 
-    @PatchMapping("/{eventId}/requests")
+    @PatchMapping(EVENT_ID_REQUESTS)
     public EventRequestStatusUpdateResult patchRequestsStatusOfEvent(
             @PathVariable @Positive Long userId,
             @PathVariable @Positive Long eventId,

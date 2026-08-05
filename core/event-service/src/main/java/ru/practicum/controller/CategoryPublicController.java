@@ -8,6 +8,7 @@ import ru.practicum.service.CategoryService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.CATEGORY_ID;
 import static ru.practicum.constants.ApiConstants.CATEGORY_PREFIX;
 
 @Slf4j
@@ -27,7 +28,7 @@ public class CategoryPublicController {
         return categoryService.getCategories(from, size);
     }
 
-    @GetMapping("/{catId}")
+    @GetMapping(CATEGORY_ID)
     public CategoryDto getCategory(@PathVariable Long catId) {
         log.info("GET /categories/{}", catId);
         return categoryService.getCategory(catId);

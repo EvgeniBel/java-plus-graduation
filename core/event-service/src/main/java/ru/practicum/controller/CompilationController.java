@@ -10,6 +10,7 @@ import ru.practicum.service.CompilationService;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.COMPILATION_ID_PATH;
 import static ru.practicum.constants.ApiConstants.COMPILATION_PREFIX;
 
 @Slf4j
@@ -37,7 +38,7 @@ public class CompilationController {
         return service.getCompilations(dto);
     }
 
-    @GetMapping("/{compId}")
+    @GetMapping(COMPILATION_ID_PATH)
     public CompilationDto getCompilationById(@PathVariable Long compId) {
         log.info("GET /compilations/{}", compId);
         return service.getCompilationById(compId);

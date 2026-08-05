@@ -12,6 +12,7 @@ import ru.practicum.dto.compilation.UpdateCompilationDto;
 import ru.practicum.service.CompilationService;
 
 import static ru.practicum.constants.ApiConstants.COMPILATIONS_BASE;
+import static ru.practicum.constants.ApiConstants.COMPILATION_ID_PATH;
 
 @Slf4j
 @RestController
@@ -33,7 +34,7 @@ public class CompilationAdminController {
         return service.createCompilation(dto);
     }
 
-    @PatchMapping("/{compId}")
+    @PatchMapping(COMPILATION_ID_PATH)
     public CompilationDto updateCompilation(
             @PositiveOrZero @PathVariable Long compId,
             @Valid @RequestBody UpdateCompilationDto dto
@@ -46,7 +47,7 @@ public class CompilationAdminController {
         return service.updateCompilation(dto);
     }
 
-    @DeleteMapping("/{compId}")
+    @DeleteMapping(COMPILATION_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeCompilation(@PositiveOrZero @PathVariable Long compId) {
         log.info("DELETE /admin/compilations/{}", compId);

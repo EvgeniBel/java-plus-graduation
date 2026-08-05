@@ -11,6 +11,7 @@ import ru.practicum.service.RequestService;
 import java.util.List;
 
 import static ru.practicum.constants.ApiConstants.REQUESTS_BASE;
+import static ru.practicum.constants.ApiConstants.REQUEST_ID_PATH;
 
 @Slf4j
 @RestController
@@ -44,7 +45,7 @@ public class RequestPrivateController {
         return requestService.getRequestByUserId(userId);
     }
 
-    @PatchMapping("/{requestId}/cancel")
+    @PatchMapping(REQUEST_ID_PATH + "/cancel")
     public ParticipationRequestDto canceledRequest(
             @PathVariable Long userId,
             @PathVariable("requestId") Long requestId

@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static ru.practicum.constants.ApiConstants.EVENTS_PREFIX;
+import static ru.practicum.constants.ApiConstants.EVENT_ID_PATH;
 
 @RestController
 @RequestMapping(EVENTS_PREFIX)
@@ -76,7 +77,7 @@ public class EventPublicController {
         return eventService.getEventsByPublicRequest(param);
     }
 
-    @GetMapping("/{eventId}")
+    @GetMapping(EVENT_ID_PATH)
     public EventFullDto getEventByIdByPublicRequest(
             @PathVariable @Positive Long eventId,
             HttpServletRequest request

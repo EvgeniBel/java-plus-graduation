@@ -20,11 +20,11 @@ import static ru.practicum.constants.ApiConstants.*;
 public interface RequestClient {
 
     @GetMapping(REQUESTS_COUNT)
-    Long getConfirmedRequestsCount(@PathVariable("eventId") Long eventId);
+    Long getConfirmedRequestsCount(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 
     @GetMapping(REQUESTS_BY_EVENT)
     List<ParticipationRequestDto> getRequestsByEvent(
-            @PathVariable("eventId") Long eventId
+            @PathVariable(EVENT_BY_ID_PARAM) Long eventId
     );
 
     @PostMapping(REQUEST_CREATE)
@@ -36,7 +36,7 @@ public interface RequestClient {
     @PatchMapping(REQUEST_CANCEL)
     ParticipationRequestDto cancelRequest(
             @RequestHeader(USER_ID_HEADER) Long userId,
-            @PathVariable("requestId") Long requestId
+            @PathVariable(REQUEST_BY_ID_PARAM) Long requestId
     );
 
     @GetMapping(REQUESTS_BASE)
@@ -46,7 +46,7 @@ public interface RequestClient {
 
     @PostMapping(REQUEST_STATUS_UPDATE)
     ParticipationRequestDto updateRequestStatus(
-            @PathVariable("requestId") Long requestId,
+            @PathVariable(REQUEST_BY_ID_PARAM) Long requestId,
             @RequestParam("status") String status
     );
 }

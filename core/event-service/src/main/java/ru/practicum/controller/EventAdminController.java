@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ru.practicum.constants.ApiConstants.EVENTS_BASE;
+import static ru.practicum.constants.ApiConstants.EVENT_ID_PATH;
 
 @RestController
 @RequestMapping(EVENTS_BASE)
@@ -56,7 +57,7 @@ public class EventAdminController {
         return eventService.getEventsByAdminRequest(param);
     }
 
-    @PatchMapping("/{eventId}")
+    @PatchMapping(EVENT_ID_PATH)
     public EventFullDto patchEventByIdByAdmin(
             @PathVariable @Positive Long eventId,
             @RequestBody @NotNull @Valid UpdateEventAdminRequest dto
@@ -65,7 +66,7 @@ public class EventAdminController {
         return eventService.patchEventByIdByAdmin(eventId, dto);
     }
 
-    @GetMapping("/{eventId}/full")
+    @GetMapping(EVENT_ID_PATH + "/full")
     public EventFullDto getEventFull(@PathVariable Long eventId) {
         log.info("Admin получение полной информации о событии с ID: {}", eventId);
         return eventService.getEventFull(eventId);

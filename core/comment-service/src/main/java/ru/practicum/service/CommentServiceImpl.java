@@ -43,7 +43,7 @@ public class CommentServiceImpl implements CommentService {
         try {
             UserShortDto user = userClient.getUserShort(userId);
             if (user == null) {
-                throw new NotFoundException("Пользователь с ID: " + userId + " не найден.");
+                throw new NotFoundException(String.format("Пользователь с ID: %s не найден.", userId));
             }
         } catch (Exception e) {
             log.error("Ошибка при проверке пользователя {}: {}", userId, e.getMessage());

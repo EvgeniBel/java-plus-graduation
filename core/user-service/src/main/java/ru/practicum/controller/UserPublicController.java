@@ -9,6 +9,7 @@ import ru.practicum.service.UserService;
 import java.util.List;
 
 import static ru.practicum.constants.ApiConstants.USERS_PUBLIC;
+import static ru.practicum.constants.ApiConstants.USER_ID_PATH;
 
 @Slf4j
 @RestController
@@ -18,7 +19,7 @@ public class UserPublicController {
 
     private final UserService userService;
 
-    @GetMapping("/{userId}/short")
+    @GetMapping(USER_ID_PATH + "/short")
     public UserShortDto getUserShort(@PathVariable Long userId) {
         log.info("GET /public/users/{}/short", userId);
         return userService.getUserShort(userId);

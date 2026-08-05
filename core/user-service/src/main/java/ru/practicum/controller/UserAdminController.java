@@ -13,10 +13,9 @@ import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.service.UserService;
 
-
 import java.util.List;
 
-import static ru.practicum.constants.ApiConstants.USERS_BASE;
+import static ru.practicum.constants.ApiConstants.*;
 
 @Slf4j
 @RestController
@@ -44,14 +43,14 @@ public class UserAdminController {
         return userService.getUsers(ids, from, size);
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping(USER_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@Positive @PathVariable Long userId) {
         log.info("DELETE /admin/users/{}", userId);
         userService.deleteUser(userId);
     }
 
-    @GetMapping("/{userId}/exists")
+    @GetMapping(USER_ID_EXISTS)
     public boolean userExists(@Positive @PathVariable Long userId) {
         log.info("GET /admin/users/{}/exists", userId);
         return userService.existsUser(userId);

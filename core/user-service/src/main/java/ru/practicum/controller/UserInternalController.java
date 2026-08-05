@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.service.UserService;
 
-import static ru.practicum.constants.ApiConstants.USERS_INTERNAL;
+import static ru.practicum.constants.ApiConstants.*;
 
 @Slf4j
 @RestController
@@ -16,13 +16,13 @@ public class UserInternalController {
 
     private final UserService userService;
 
-    @GetMapping("/{userId}/exists")
+    @GetMapping(USER_ID_EXISTS)
     public boolean checkUserExists(@PathVariable Long userId) {
         log.info("GET /internal/users/{}/exists", userId);
         return userService.existsUser(userId);
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping(USER_ID_PATH)
     public UserDto getUserInternal(@PathVariable Long userId) {
         log.info("GET /internal/users/{}", userId);
         return userService.getUserInternal(userId);

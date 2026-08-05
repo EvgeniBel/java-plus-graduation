@@ -14,16 +14,16 @@ public interface EventClient {
 
     // === АДМИНИСТРАТОР ===
     @GetMapping(EVENT_BY_ID)
-    EventFullDto getEventById(@PathVariable("eventId") Long eventId);
+    EventFullDto getEventById(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 
     @GetMapping(EVENT_STATUS)
-    String getEventStatus(@PathVariable("eventId") Long eventId);
+    String getEventStatus(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 
     @GetMapping(EVENT_EXISTS)
-    boolean eventExists(@PathVariable("eventId") Long eventId);
+    boolean eventExists(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 
     @GetMapping(EVENT_FULL)
-    EventFullDto getEventFull(@PathVariable("eventId") Long eventId);
+    EventFullDto getEventFull(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 
     // === ПУБЛИЧНЫЕ ===
     @GetMapping(EVENTS_PUBLIC)
@@ -38,7 +38,7 @@ public interface EventClient {
                                         @RequestParam(defaultValue = "10") Integer size);
 
     @GetMapping(EVENT_SHORT)
-    EventShortDto getEventShort(@PathVariable("eventId") Long eventId);
+    EventShortDto getEventShort(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 
     // === ПОЛЬЗОВАТЕЛЬСКИЕ ===
     @PostMapping(EVENTS_USER)
@@ -49,11 +49,11 @@ public interface EventClient {
 
     @PutMapping(EVENT_BY_ID)
     EventFullDto updateEvent(
-            @PathVariable("eventId") Long eventId,
+            @PathVariable(EVENT_BY_ID_PARAM) Long eventId,
             @RequestHeader(USER_ID_HEADER) Long userId,
             @Valid @RequestBody UpdateEventUserRequest request
     );
 
     @PostMapping(EVENT_CONFIRM_REQUEST)
-    void confirmRequest(@PathVariable("eventId") Long eventId);
+    void confirmRequest(@PathVariable(EVENT_BY_ID_PARAM) Long eventId);
 }

@@ -11,6 +11,7 @@ import ru.practicum.dto.comment.UpdateCommentUserRequest;
 import ru.practicum.service.CommentService;
 
 import static ru.practicum.constants.ApiConstants.COMMENTS_BY_USER;
+import static ru.practicum.constants.ApiConstants.COMMENT_ID_PATH;
 
 
 @RestController
@@ -32,7 +33,7 @@ public class CommentPrivateController {
         return commentService.addComment(userId, eventId, dto);
     }
 
-    @PatchMapping("/{commentId}")
+    @PatchMapping(COMMENT_ID_PATH)
     public CommentResponseDto patchCommentById(
             @PathVariable Long userId,
             @RequestParam Long eventId,
@@ -47,7 +48,7 @@ public class CommentPrivateController {
         return commentService.patchCommentById(dto);
     }
 
-    @DeleteMapping("/{commentId}")
+    @DeleteMapping(COMMENT_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(
             @PathVariable Long userId,

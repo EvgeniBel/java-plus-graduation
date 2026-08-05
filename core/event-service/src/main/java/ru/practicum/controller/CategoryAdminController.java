@@ -12,6 +12,7 @@ import ru.practicum.dto.category.NewCategoryRequest;
 import ru.practicum.service.CategoryService;
 
 import static ru.practicum.constants.ApiConstants.CATEGORIES_BASE;
+import static ru.practicum.constants.ApiConstants.CATEGORY_ID;
 
 @Slf4j
 @RestController
@@ -30,7 +31,7 @@ CategoryAdminController {
         return categoryService.createCategory(request);
     }
 
-    @PatchMapping("/{catId}")
+    @PatchMapping(CATEGORY_ID)
     public CategoryDto updateCategory(
             @Positive @PathVariable Long catId,
             @Valid @RequestBody CategoryDto categoryDto
@@ -39,7 +40,7 @@ CategoryAdminController {
         return categoryService.updateCategory(catId, categoryDto);
     }
 
-    @DeleteMapping("/{catId}")
+    @DeleteMapping(CATEGORY_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@Positive @PathVariable Long catId) {
         log.info("DELETE /admin/categories/{}", catId);

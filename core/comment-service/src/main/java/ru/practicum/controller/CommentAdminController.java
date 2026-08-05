@@ -16,7 +16,7 @@ import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.CommentStatusUpdateRequest;
 import ru.practicum.service.CommentService;
 
-import static ru.practicum.constants.ApiConstants.COMMENTS_BASE;
+import static ru.practicum.constants.ApiConstants.*;
 
 
 @RestController
@@ -28,7 +28,7 @@ public class CommentAdminController {
 
     private final CommentService commentService;
 
-    @PatchMapping("/{commentId}/moderate")
+    @PatchMapping(COMMENT_ID_PATH_MODERATE)
     public CommentResponseDto updateCommentStatus(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentStatusUpdateRequest request
@@ -51,7 +51,7 @@ public class CommentAdminController {
         return commentService.getCommentsByEvent(eventId, status, pageable);
     }
 
-    @DeleteMapping("/{commentId}")
+    @DeleteMapping(COMMENT_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAdminComment(@PathVariable Long commentId) {
         log.info("Admin запрос: удалить комментарий ID: {}", commentId);
