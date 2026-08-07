@@ -1,14 +1,16 @@
 package ru.practicum.aggregator.kafka;
 
+import com.netflix.appinfo.InstanceInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import ru.practicum.aggregator.model.ActionType;
+
 import ru.practicum.aggregator.model.UserActionEvent;
 import ru.practicum.aggregator.service.AggregatorService;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
+import ru.practicum.telemetry.messages.ActionType;
 
 @Slf4j
 @Service

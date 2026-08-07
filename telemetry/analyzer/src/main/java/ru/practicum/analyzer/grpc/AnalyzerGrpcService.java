@@ -25,7 +25,7 @@ public class AnalyzerGrpcService extends AnalyzerControllerGrpc.AnalyzerControll
         Long userId = request.getUserId();
         int maxResults = request.getMaxResults();
 
-        log.info("📊 Запрос рекомендаций: userId={}, maxResults={}", userId, maxResults);
+        log.info("Запрос рекомендаций: userId={}, maxResults={}", userId, maxResults);
 
         try {
             List<RecommendationService.RecommendedEvent> recommendations =

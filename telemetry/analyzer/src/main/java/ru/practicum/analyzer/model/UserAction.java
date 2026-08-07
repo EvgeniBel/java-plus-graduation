@@ -2,6 +2,7 @@ package ru.practicum.analyzer.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ru.practicum.telemetry.messages.ActionType;
 
 import java.time.LocalDateTime;
 

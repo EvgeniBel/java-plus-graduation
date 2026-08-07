@@ -1,4 +1,5 @@
 package ru.practicum.analyzer.kafka;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -6,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.analyzer.model.UserMaxWeight;
 import ru.practicum.analyzer.repository.UserActionRepository;
 import ru.practicum.analyzer.service.SimilarityService;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
@@ -77,7 +79,7 @@ public class KafkaConsumerService {
         }
     }
 
-    private int getActionWeight(ru.practicum.ewm.stats.avro.ActionTypeAvro actionType) {
+    private int getActionWeight(ActionTypeAvro actionType) {
         return switch (actionType) {
             case VIEW -> 1;
             case REGISTER -> 2;
