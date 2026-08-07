@@ -1,43 +1,37 @@
 package ru.practicum.aggregator.kafka;
 
-import com.netflix.appinfo.InstanceInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-
-import ru.practicum.aggregator.model.UserActionEvent;
-import ru.practicum.aggregator.service.AggregatorService;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.practicum.telemetry.messages.ActionType;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class KafkaConsumerService {
 
-    private final AggregatorService aggregatorService;
-
-    @KafkaListener(topics = "${kafka.topics.user-actions}", groupId = "aggregator-group")
-    public void consumeUserAction(ConsumerRecord<String, UserActionAvro> record) {
+    @KafkaListener(
+            topics = "${kafka.topics.user-actions}",
+            groupId = "aggregator-group",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void consumeUserAction(UserActionAvro action) {
         try {
-            UserActionAvro avro = record.value();
+            log.info("Получено действие из Kafka: userId={}, eventId={}, actionType={}",
+                    action.getUserId(),
+                    action.getEventId(),
+                    action.getActionType());
 
-            log.info("📥 Получено сообщение из Kafka: userId={}, eventId={}, action={}",
-                    avro.getUserId(), avro.getEventId(), avro.getActionType());
-
-            UserActionEvent event = UserActionEvent.builder()
-                    .userId(avro.getUserId())
-                    .eventId(avro.getEventId())
-                    .actionType(ActionType.valueOf(avro.getActionType().name()))
-                    .timestamp(avro.getTimestamp())
-                    .build();
-
-            aggregatorService.processUserAction(event);
+            processUserAction(action);
 
         } catch (Exception e) {
-            log.error("Ошибка обработки сообщения из Kafka: {}", e.getMessage(), e);
+            log.error("Ошибка обработки UserAction: {}", e.getMessage(), e);
         }
+    }
+
+    private void processUserAction(UserActionAvro action) {
+        log.info("Обработка действия: userId={}, eventId={}",
+                action.getUserId(), action.getEventId());
     }
 }

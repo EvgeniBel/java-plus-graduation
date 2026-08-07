@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.collector.config;
+package ru.practicum.collector.config;
 
 import net.devh.boot.grpc.server.interceptor.GlobalServerInterceptorConfigurer;
 import org.springframework.context.annotation.Bean;

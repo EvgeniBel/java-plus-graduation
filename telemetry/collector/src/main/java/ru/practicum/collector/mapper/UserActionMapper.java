@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.collector.mapper;
+package ru.practicum.collector.mapper;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;

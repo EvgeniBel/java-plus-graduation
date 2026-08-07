@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.collector.error;
+package ru.practicum.collector.error;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;

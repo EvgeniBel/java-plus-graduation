@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.collector.grpc;
+package ru.practicum.collector.grpc;
 
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;

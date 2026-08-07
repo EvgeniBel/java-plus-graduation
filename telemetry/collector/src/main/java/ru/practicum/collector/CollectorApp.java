@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.collector;
+package ru.practicum.collector;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
