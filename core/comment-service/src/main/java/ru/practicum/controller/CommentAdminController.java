@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.CommentStatusUpdateRequest;
-import ru.practicum.service.CommentService;
+import ru.practicum.aggregator.service.CommentService;
 
 import static ru.practicum.constants.ApiConstants.*;
 

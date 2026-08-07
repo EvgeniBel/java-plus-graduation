@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package telemetry.services;
+
+import "telemetry/messages/recommendations.proto";
+import "telemetry/common/common.proto";
+
+option java_multiple_files = true;
+option java_package = "ru.practicum.telemetry.services";
+
+service AnalyzerController {
+    rpc GetRecommendationsForUser (UserPredictionsRequest) returns (stream RecommendedEvent);
+    rpc GetSimilarEvents (SimilarEventsRequest) returns (stream RecommendedEvent);
+    rpc GetInteractionsCount (InteractionsCountRequest) returns (stream RecommendedEvent);
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package telemetry.services;
+
+import "telemetry/messages/userAction.proto";
+import "telemetry/common/common.proto";
+
+option java_multiple_files = true;
+option java_package = "ru.practicum.telemetry.services";
+
+service CollectorController {
+    rpc SendUserAction (UserActionRequest) returns (OperationStatus);
+}

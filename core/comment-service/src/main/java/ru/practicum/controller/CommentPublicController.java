@@ -8,7 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.comment.CommentResponseDto;
-import ru.practicum.service.CommentService;
+import ru.practicum.aggregator.service.CommentService;
 
 import static ru.practicum.constants.ApiConstants.COMMENTS_BY_EVENT;
 

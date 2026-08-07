@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CreateCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationDto;
-import ru.practicum.service.CompilationService;
+import ru.practicum.aggregator.service.CompilationService;
 
 import static ru.practicum.constants.ApiConstants.COMPILATIONS_BASE;
 import static ru.practicum.constants.ApiConstants.COMPILATION_ID_PATH;

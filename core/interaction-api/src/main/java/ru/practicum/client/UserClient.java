@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.client.fallback.UserClientFallback;
-import ru.practicum.config.FeignConfig;
+import ru.practicum.aggregator.collector.config.FeignConfig;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;

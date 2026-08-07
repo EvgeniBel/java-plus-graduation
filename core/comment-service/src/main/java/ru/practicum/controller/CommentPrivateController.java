@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.comment.UpdateCommentUserRequest;
-import ru.practicum.service.CommentService;
+import ru.practicum.aggregator.service.CommentService;
 
 import static ru.practicum.constants.ApiConstants.COMMENTS_BY_USER;
 import static ru.practicum.constants.ApiConstants.COMMENT_ID_PATH;

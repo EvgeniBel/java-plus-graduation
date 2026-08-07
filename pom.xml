@@ -18,16 +18,22 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<spring-cloud-dependencies.version>2023.0.0</spring-cloud-dependencies.version>
 		<java.version>21</java.version>
+
+		<!-- Общие версии для всего проекта -->
+		<spring-cloud-dependencies.version>2023.0.0</spring-cloud-dependencies.version>
 		<lombok.version>1.18.34</lombok.version>
 		<querydsl.version>5.1.0</querydsl.version>
-		<avro.version>1.11.3</avro.version>
-		<kafka-clients.version>3.6.1</kafka-clients.version>
 		<springdoc-openapi-starter.version>2.6.0</springdoc-openapi-starter.version>
-		<grpc-spring-boot-starter.version>3.1.0.RELEASE</grpc-spring-boot-starter.version>
-		<protobuf.version>3.23.4</protobuf.version>
+
+		<!-- Версии для телеметрии (используются только в telemetry модулях) -->
+		<avro.version>1.11.3</avro.version>
 		<grpc.version>1.63.0</grpc.version>
+		<protobuf.version>3.23.4</protobuf.version>
+		<grpc-spring-boot-starter.version>3.1.0.RELEASE</grpc-spring-boot-starter.version>
+		<kafka-clients.version>3.6.1</kafka-clients.version>
+
+		<!-- Версии плагинов -->
 		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
 		<avro-maven-plugin.version>${avro.version}</avro-maven-plugin.version>
 	</properties>
@@ -52,16 +58,14 @@
 				<scope>import</scope>
 			</dependency>
 
-			<!-- Внутренние модули -->
+			<!-- ===== ОБЩИЕ ДЛЯ ВСЕХ МОДУЛЕЙ ===== -->
+
+			<!-- Lombok -->
 			<dependency>
-				<groupId>ru.practicum</groupId>
-				<artifactId>stats-dto</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>ru.practicum</groupId>
-				<artifactId>stats-client</artifactId>
-				<version>${project.version}</version>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<optional>true</optional>
 			</dependency>
 
 			<!-- QueryDSL -->
@@ -78,26 +82,117 @@
 				<version>${querydsl.version}</version>
 			</dependency>
 
-			<!-- Lombok -->
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok.version}</version>
-				<optional>true</optional>
-			</dependency>
-
+			<!-- Spring Boot Rest Client -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-restclient</artifactId>
 				<version>3.2.0</version>
 			</dependency>
 
-				<dependency>
-					<groupId>jakarta.persistence</groupId>
-					<artifactId>jakarta.persistence-api</artifactId>
-					<version>3.1.0</version>
-				</dependency>
+			<!-- JPA API -->
+			<dependency>
+				<groupId>jakarta.persistence</groupId>
+				<artifactId>jakarta.persistence-api</artifactId>
+				<version>3.1.0</version>
+			</dependency>
 
+			<!-- ===== ВНУТРЕННИЕ МОДУЛИ ===== -->
+
+			<!-- Stats модули (используются в core и других) -->
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>stats-dto</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>stats-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- ===== ЗАВИСИМОСТИ ДЛЯ TELEMETRY ===== -->
+			<!-- Эти зависимости нужны ТОЛЬКО для telemetry модулей,
+			     но версии объявлены здесь для централизованного управления -->
+
+			<!-- Avro -->
+			<dependency>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro</artifactId>
+				<version>${avro.version}</version>
+			</dependency>
+
+			<!-- gRPC -->
+			<dependency>
+				<groupId>net.devh</groupId>
+				<artifactId>grpc-server-spring-boot-starter</artifactId>
+				<version>${grpc-spring-boot-starter.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.devh</groupId>
+				<artifactId>grpc-client-spring-boot-starter</artifactId>
+				<version>${grpc-spring-boot-starter.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.grpc</groupId>
+				<artifactId>grpc-netty-shaded</artifactId>
+				<version>${grpc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.grpc</groupId>
+				<artifactId>grpc-protobuf</artifactId>
+				<version>${grpc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.grpc</groupId>
+				<artifactId>grpc-stub</artifactId>
+				<version>${grpc.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java</artifactId>
+				<version>${protobuf.version}</version>
+			</dependency>
+
+			<!-- Kafka -->
+			<dependency>
+				<groupId>org.springframework.kafka</groupId>
+				<artifactId>spring-kafka</artifactId>
+				<version>3.1.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.kafka</groupId>
+				<artifactId>kafka-clients</artifactId>
+				<version>${kafka-clients.version}</version>
+			</dependency>
+
+			<!-- Внутренние модули telemetry -->
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>avro-schemas</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>proto-schemas</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>aggregator</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>analyzer</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>collector</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -105,6 +200,7 @@
 		<module>stats</module>
 		<module>infra</module>
 		<module>core</module>
+		<module>telemetry</module>
 	</modules>
 
 	<build>
