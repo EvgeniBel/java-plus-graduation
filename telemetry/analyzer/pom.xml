@@ -77,19 +77,24 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Spring Cloud -->
+        <!-- ===== SPRING CLOUD ===== -->
+        <!-- Обязательно для Eureka клиента -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
+            <artifactId>spring-cloud-starter</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
+
+        <!-- Eureka клиент -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

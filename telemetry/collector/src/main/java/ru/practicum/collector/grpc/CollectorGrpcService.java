@@ -4,8 +4,8 @@ import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import ru.practicum.aggregator.collector.kafka.KafkaProducerService;
-import ru.practicum.aggregator.collector.mapper.UserActionMapper;
+import ru.practicum.collector.kafka.KafkaProducerService;
+import ru.practicum.collector.mapper.UserActionMapper;
 import ru.practicum.telemetry.common.OperationStatus;
 import ru.practicum.telemetry.messages.UserAction;
 import ru.practicum.telemetry.messages.UserActionRequest;
@@ -24,7 +24,7 @@ public class CollectorGrpcService extends CollectorControllerGrpc.CollectorContr
         try {
             UserAction action = request.getAction();
 
-            log.info("📥 Получено действие пользователя: userId={}, eventId={}, actionType={}, timestamp={}",
+            log.info("Получено действие пользователя: userId={}, eventId={}, actionType={}, timestamp={}",
                     action.getUserId(),
                     action.getEventId(),
                     action.getActionType(),
@@ -68,7 +68,7 @@ public class CollectorGrpcService extends CollectorControllerGrpc.CollectorContr
             log.error("Ошибка обработки действия пользователя: {}", e.getMessage(), e);
             responseObserver.onNext(OperationStatus.newBuilder()
                     .setSuccess(false)
-                    .setMessage("Ошибка: " + e.getMessage())
+                    .setMessage(String.format("Ошибка: %s",e.getMessage()))
                     .build());
             responseObserver.onCompleted();
         }

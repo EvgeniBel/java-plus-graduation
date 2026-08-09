@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+
 import ru.practicum.avro.serializer.AvroSerializer;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 

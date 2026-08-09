@@ -22,7 +22,7 @@ public class KafkaProducerService {
 
     public void sendUserAction(UserActionAvro action) {
         try {
-            String key = action.getUserId().toString();
+            String key = String.valueOf(action.getUserId());
 
             log.info("Отправка действия в Kafka: topic={}, userId={}, eventId={}, action={}",
                     userActionsTopic, action.getUserId(), action.getEventId(), action.getActionType());

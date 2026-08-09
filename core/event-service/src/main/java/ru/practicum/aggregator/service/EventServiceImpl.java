@@ -7,6 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatClient;
+import ru.practicum.aggregator.collector.mapper.EventMapper;
+import ru.practicum.aggregator.collector.mapper.LocationMapper;
+import ru.practicum.aggregator.model.*;
+import ru.practicum.aggregator.repository.CategoryRepository;
+import ru.practicum.aggregator.repository.EventRepository;
+import ru.practicum.aggregator.repository.LocationRepository;
 import ru.practicum.client.RequestClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.constants.Constants;
@@ -20,12 +26,6 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.CreationRulesException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
-import ru.practicum.aggregator.collector.mapper.EventMapper;
-import ru.practicum.aggregator.collector.mapper.LocationMapper;
-import ru.practicum.aggregator.model.*;
-import ru.practicum.aggregator.repository.CategoryRepository;
-import ru.practicum.aggregator.repository.EventRepository;
-import ru.practicum.aggregator.repository.LocationRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,6 +42,7 @@ public class EventServiceImpl implements EventService {
     private final UserClient userClient;
     private final RequestClient requestClient;
     private final StatClient statClient;
+    private final RecommendationService recommendationService;
 
     // ==================== ОСНОВНЫЕ МЕТОДЫ ====================
 
@@ -86,14 +87,14 @@ public class EventServiceImpl implements EventService {
         Event addedEvent = eventRepository.save(newEvent);
         log.info("Создано событие с ID: {}", addedEvent.getId());
 
-        return EventMapper.eventToFullDto(addedEvent, initiator, category, 0L, 0L);
+        // Рейтинг нового события = 0
+        return EventMapper.eventToFullDto(addedEvent, initiator, category, 0L, 0.0);
     }
 
     @Override
     public List<EventShortDto> getEventsOfUser(Long userId, Integer from, Integer size) {
         log.info("Получение событий пользователя: userId={}, from={}, size={}", userId, from, size);
 
-        // Проверяем пользователя через Feign
         try {
             if (!userClient.userExists(userId)) {
                 throw new NotFoundException(String.format("Пользователь с ID: %s не найден.", userId));
@@ -113,23 +114,28 @@ public class EventServiceImpl implements EventService {
 
         // Получаем дополнительные данные
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
-        Map<Long, Long> viewsStats = getViewsCount(events);
+
+        // ===== НОВОЕ: Получаем рейтинги через gRPC =====
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Double> ratings = recommendationService.getEventsRatings(eventIds);
+
         Map<Long, Category> categories = getCategories(events);
         Map<Long, UserShortDto> users = getUsers(events);
 
         List<EventShortDto> result = new ArrayList<>();
         for (Event event : events) {
-            Long views = viewsStats.getOrDefault(event.getId(), 0L);
+            Double rating = ratings.getOrDefault(event.getId(), 0.0);
             Long confirmedRequests = confirmedRequestsCount.getOrDefault(event.getId(), 0L);
             Category category = categories.get(event.getCategoryId());
             UserShortDto user = users.get(event.getInitiatorId());
 
             EventShortDto eventShortDto = EventMapper.eventToShortDto(
-                    event, user, category, confirmedRequests, views);
+                    event, user, category, confirmedRequests, rating);
             result.add(eventShortDto);
         }
         return result;
     }
+
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
@@ -138,19 +144,19 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
-        // Проверяем, что пользователь является инициатором
         if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException(
                     String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
-        // Получаем данные
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
-        Long views = getViewsCount(event);
+
+        // ===== НОВОЕ: Получаем рейтинг через gRPC =====
+        double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(event);
 
-        return EventMapper.eventToFullDto(event, initiator, category, confirmedRequests, views);
+        return EventMapper.eventToFullDto(event, initiator, category, confirmedRequests, rating);
     }
 
     @Override
@@ -169,19 +175,23 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
-        Map<Long, Long> viewsStats = getViewsCount(events);
+
+        // ===== НОВОЕ: Получаем рейтинги через gRPC =====
+        List<Long> ids = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Double> ratings = recommendationService.getEventsRatings(ids);
+
         Map<Long, Category> categories = getCategories(events);
         Map<Long, UserShortDto> users = getUsers(events);
 
         List<EventShortDto> result = new ArrayList<>();
         for (Event event : events) {
-            Long views = viewsStats.getOrDefault(event.getId(), 0L);
+            Double rating = ratings.getOrDefault(event.getId(), 0.0);
             Long confirmedRequests = confirmedRequestsCount.getOrDefault(event.getId(), 0L);
             Category category = categories.get(event.getCategoryId());
             UserShortDto user = users.get(event.getInitiatorId());
 
             EventShortDto eventShortDto = EventMapper.eventToShortDto(
-                    event, user, category, confirmedRequests, views);
+                    event, user, category, confirmedRequests, rating);
             result.add(eventShortDto);
         }
         return result;
@@ -280,10 +290,10 @@ public class EventServiceImpl implements EventService {
         // Получаем данные для ответа
         UserShortDto initiator = getUser(patchedEvent.getInitiatorId());
         Category category = getCategory(patchedEvent.getCategoryId());
-        Long views = getViewsCount(patchedEvent);
+        double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(patchedEvent);
 
-        return EventMapper.eventToFullDto(patchedEvent, initiator, category, confirmedRequests, views);
+        return EventMapper.eventToFullDto(patchedEvent, initiator, category, confirmedRequests, rating);
     }
 
     @Override
@@ -400,19 +410,20 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
-        Map<Long, Long> viewsStats = getViewsCount(events);
+        Map<Long, Double> ratings = recommendationService.getEventsRatings(
+                events.stream().map(Event::getId).collect(Collectors.toList()));
         Map<Long, Category> categories = getCategories(events);
         Map<Long, UserShortDto> users = getUsers(events);
 
         List<EventFullDto> result = new ArrayList<>();
         for (Event event : events) {
-            Long views = viewsStats.getOrDefault(event.getId(), 0L);
+            Double rating = ratings.getOrDefault(event.getId(), 0.0);
             Long confirmedRequests = confirmedRequestsCount.getOrDefault(event.getId(), 0L);
             Category category = categories.get(event.getCategoryId());
             UserShortDto user = users.get(event.getInitiatorId());
 
             EventFullDto eventFullDto = EventMapper.eventToFullDto(
-                    event, user, category, confirmedRequests, views);
+                    event, user, category, confirmedRequests, rating);  // ← rating
             result.add(eventFullDto);
         }
         return result;
@@ -505,10 +516,10 @@ public class EventServiceImpl implements EventService {
         // Получаем данные для ответа
         UserShortDto initiator = getUser(patchedEvent.getInitiatorId());
         Category category = getCategory(patchedEvent.getCategoryId());
-        Long views = getViewsCount(patchedEvent);
+        double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(patchedEvent);
 
-        return EventMapper.eventToFullDto(patchedEvent, initiator, category, confirmedRequests, views);
+        return EventMapper.eventToFullDto(patchedEvent, initiator, category, confirmedRequests, rating);
     }
 
     @Override
@@ -536,7 +547,11 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
-        Map<Long, Long> viewsStats = getViewsCount(events);
+
+        // ===== НОВОЕ: Получаем рейтинги через gRPC =====
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Double> ratings = recommendationService.getEventsRatings(eventIds);
+
         Map<Long, Category> categories = getCategories(events);
         Map<Long, UserShortDto> users = getUsers(events);
 
@@ -550,27 +565,27 @@ public class EventServiceImpl implements EventService {
 
         List<EventShortDto> result = new ArrayList<>();
         for (Event event : events) {
-            Long views = viewsStats.getOrDefault(event.getId(), 0L);
+            Double rating = ratings.getOrDefault(event.getId(), 0.0);
             Long confirmedRequests = confirmedRequestsCount.getOrDefault(event.getId(), 0L);
             Category category = categories.get(event.getCategoryId());
             UserShortDto user = users.get(event.getInitiatorId());
 
             EventShortDto eventShortDto = EventMapper.eventToShortDto(
-                    event, user, category, confirmedRequests, views);
+                    event, user, category, confirmedRequests, rating);
             result.add(eventShortDto);
         }
 
         String sort = param.getSort();
         if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
             return result.stream()
-                    .sorted(Comparator.comparingLong(EventShortDto::getViews).reversed())
+                    .sorted(Comparator.comparingDouble(EventShortDto::getRating).reversed())
                     .toList();
         }
         return result;
     }
 
     @Override
-    public EventFullDto getEventByIdByPublicRequest(Long eventId) {
+    public EventFullDto getEventByIdByPublicRequest(Long eventId, Long userId) {
         log.info("Публичное получение события {}", eventId);
 
         Event event = eventRepository.findById(eventId)
@@ -580,12 +595,19 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Можно получить данные только опубликованного события.");
         }
 
+        // ===== НОВОЕ: Отправка просмотра в Collector =====
+        if (userId != null) {
+            recommendationService.sendViewAction(userId, eventId);
+        }
+
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
-        Long views = getViewsCount(event);
+
+        // ===== НОВОЕ: Получаем рейтинг через gRPC =====
+        double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(event);
 
-        return EventMapper.eventToFullDto(event, initiator, category, confirmedRequests, views);
+        return EventMapper.eventToFullDto(event, initiator, category, confirmedRequests, rating);
     }
 
     // ==================== МЕТОДЫ ДЛЯ FEIGN КЛИЕНТОВ ====================
@@ -604,10 +626,10 @@ public class EventServiceImpl implements EventService {
 
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
-        Long views = getViewsCount(event);
+        double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(event);
 
-        return EventMapper.eventToFullDto(event, initiator, category, confirmedRequests, views);
+        return EventMapper.eventToFullDto(event, initiator, category, confirmedRequests, rating);
     }
 
     @Override
@@ -619,10 +641,10 @@ public class EventServiceImpl implements EventService {
 
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
-        Long views = getViewsCount(event);
+        double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(event);
 
-        return EventMapper.eventToShortDto(event, initiator, category, confirmedRequests, views);
+        return EventMapper.eventToShortDto(event, initiator, category, confirmedRequests, rating);
     }
 
     @Override
@@ -630,6 +652,23 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
         return event.getState().toString();
+    }
+
+    // ===== МЕТОДЫ ДЛЯ РЕЙТИНГА =====
+
+    @Override
+    public double getEventRating(Long eventId) {
+        return recommendationService.getEventRating(eventId);
+    }
+
+    @Override
+    public Map<Long, Double> getEventsRatings(List<Long> eventIds) {
+        return recommendationService.getEventsRatings(eventIds);
+    }
+
+    @Override
+    public void sendViewAction(Long userId, Long eventId) {
+        recommendationService.sendViewAction(userId, eventId);
     }
 
     // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================

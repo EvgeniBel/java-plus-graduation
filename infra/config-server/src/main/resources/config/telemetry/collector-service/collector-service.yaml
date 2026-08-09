@@ -1,8 +1,6 @@
-server:
-  port: 0
-
 spring:
-
+  application:
+    name: collector-service
   cloud:
     config:
       enabled: true
@@ -15,10 +13,16 @@ spring:
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-      properties:
-        schema.registry.url: http://localhost:8081
-        specific.avro.reader: true
+      value-serializer: ru.practicum.avro.serializer.AvroSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+      compression-type: snappy
+      batch-size: 16384
+      linger-ms: 10
+
+server:
+  port: 0
 
 grpc:
   server:
@@ -37,7 +41,7 @@ eureka:
 
 kafka:
   topics:
-    user-actions: stats.user-actions.v1
+    user-actions: user-actions-topic
 
 management:
   endpoints:
@@ -47,3 +51,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+logging:
+  level:
+    ru.practicum.collector: DEBUG
+    org.springframework.kafka: INFO

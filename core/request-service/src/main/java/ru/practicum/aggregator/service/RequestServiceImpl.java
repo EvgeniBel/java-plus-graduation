@@ -18,6 +18,10 @@ import ru.practicum.aggregator.collector.mapper.RequestMapper;
 import ru.practicum.aggregator.model.ParticipationRequest;
 import ru.practicum.aggregator.repository.RequestRepository;
 
+// ===== НОВЫЕ ИМПОРТЫ =====
+import ru.practicum.grpc.CollectorGrpcClient;
+import ru.practicum.telemetry.messages.ActionType;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +34,9 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserClient userClient;
     private final EventClient eventClient;
+
+    // ===== НОВЫЙ КЛИЕНТ =====
+    private final CollectorGrpcClient collectorClient;
 
     @Transactional
     @Override
@@ -118,7 +125,31 @@ public class RequestServiceImpl implements RequestService {
 
         ParticipationRequest saved = requestRepository.save(request);
         log.info("Создан запрос с id={}, статус={}", saved.getId(), initialStatus);
+
+        // ===== НОВОЕ: Отправка регистрации в Collector =====
+        if (saved.getStatus() == RequestStatus.CONFIRMED) {
+            sendRegistrationToCollector(userId, dto.getEventId());
+        }
+
         return RequestMapper.toParticipationRequestDto(saved);
+    }
+
+    /**
+     * Отправка информации о регистрации в Collector
+     */
+    private void sendRegistrationToCollector(Long userId, Long eventId) {
+        try {
+            log.info("📤 Отправка регистрации в Collector: userId={}, eventId={}", userId, eventId);
+            boolean success = collectorClient.sendUserAction(userId, eventId, ActionType.ACTION_REGISTER);
+            if (success) {
+                log.info("✅ Регистрация отправлена: userId={}, eventId={}", userId, eventId);
+            } else {
+                log.warn("⚠️ Не удалось отправить регистрацию: userId={}, eventId={}", userId, eventId);
+            }
+        } catch (Exception e) {
+            log.error("❌ Ошибка отправки регистрации: userId={}, eventId={}", userId, eventId, e);
+            // Не бросаем исключение, чтобы не нарушить основной поток
+        }
     }
 
     @Override
@@ -216,7 +247,11 @@ public class RequestServiceImpl implements RequestService {
         ParticipationRequest updated = requestRepository.save(request);
         log.info("Статус запроса {} обновлен на {}", requestId, newStatus);
 
+        // ===== Если запрос подтвержден, отправляем регистрацию =====
+        if (newStatus == RequestStatus.CONFIRMED) {
+            sendRegistrationToCollector(request.getRequesterId(), request.getEventId());
+        }
+
         return RequestMapper.toParticipationRequestDto(updated);
     }
-
 }

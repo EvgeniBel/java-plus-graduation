@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.model;
+package ru.practicum.ewm;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserMaxWeight {
-    private Long userId;
+public class RecommendedEventDto {
     private Long eventId;
-    private Integer maxWeight;
-    private Long timestamp;
+    private Double score;
 }

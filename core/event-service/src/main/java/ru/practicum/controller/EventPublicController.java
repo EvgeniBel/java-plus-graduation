@@ -1,6 +1,5 @@
 package ru.practicum.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -8,15 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.StatClient;
-import ru.practicum.constants.Constants;
+import ru.practicum.aggregator.service.EventService;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.PublicEventRequestParam;
-import ru.practicum.ewm.HitDto;
-import ru.practicum.aggregator.service.EventService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static ru.practicum.constants.ApiConstants.EVENTS_PREFIX;
@@ -30,7 +25,6 @@ import static ru.practicum.constants.ApiConstants.EVENT_ID_PATH;
 public class EventPublicController {
 
     private final EventService eventService;
-    private final StatClient statClient;
 
     @GetMapping
     public List<EventShortDto> getEventsByPublicRequest(
@@ -43,24 +37,10 @@ public class EventPublicController {
             @RequestParam(required = false) @Pattern(regexp = "EVENT_DATE|VIEWS",
                     message = "Сортировка возможна только по EVENT_DATE или VIEWS") String sort,
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
-            @RequestParam(defaultValue = "10") @Positive Integer size,
-            HttpServletRequest request
+            @RequestParam(defaultValue = "10") @Positive Integer size
     ) {
         log.info("Публичный запрос на получение событий: text={}, categories={}, paid={}, sort={}, from={}, size={}",
                 text, categories, paid, sort, from, size);
-
-        // Отправка статистики
-        try {
-            HitDto hitDto = HitDto.builder()
-                    .app("event-service")
-                    .uri(request.getRequestURI())
-                    .ip(request.getRemoteAddr())
-                    .timestamp(LocalDateTime.now().format(Constants.FORMATTER))
-                    .build();
-            statClient.postHit(hitDto);
-        } catch (Exception e) {
-            log.warn("Не удалось отправить статистику: {}", e.getMessage());
-        }
 
         PublicEventRequestParam param = PublicEventRequestParam.builder()
                 .text(text)
@@ -80,23 +60,9 @@ public class EventPublicController {
     @GetMapping(EVENT_ID_PATH)
     public EventFullDto getEventByIdByPublicRequest(
             @PathVariable @Positive Long eventId,
-            HttpServletRequest request
+            @RequestHeader(value = "X-EWM-USER-ID", required = false) Long userId
     ) {
-        log.info("Публичный запрос на получение события с ID: {}", eventId);
-
-        // Отправка статистики
-        try {
-            HitDto hitDto = HitDto.builder()
-                    .app("event-service")
-                    .uri(request.getRequestURI())
-                    .ip(request.getRemoteAddr())
-                    .timestamp(LocalDateTime.now().format(Constants.FORMATTER))
-                    .build();
-            statClient.postHit(hitDto);
-        } catch (Exception e) {
-            log.warn("Не удалось отправить статистику: {}", e.getMessage());
-        }
-
-        return eventService.getEventByIdByPublicRequest(eventId);
+        log.info("Публичный запрос на получение события с ID: {}, userId: {}", eventId, userId);
+        return eventService.getEventByIdByPublicRequest(eventId, userId);
     }
 }

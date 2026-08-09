@@ -131,6 +131,7 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>

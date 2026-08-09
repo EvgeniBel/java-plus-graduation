@@ -1,4 +1,4 @@
-package serializer;
+package ru.practicum.avro.serializer;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.io.BinaryEncoder;

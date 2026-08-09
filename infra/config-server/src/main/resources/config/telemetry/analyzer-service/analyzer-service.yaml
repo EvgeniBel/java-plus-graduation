@@ -1,16 +1,12 @@
+server:
+  port: 8090
+
 spring:
   application:
     name: analyzer-service
-  config:
-    import: "optional:configserver:"
   cloud:
     config:
-      uri: http://localhost:8888
-      discovery:
-        enabled: false
-      fail-fast: false
-
-  # ===== ЛОКАЛЬНЫЕ НАСТРОЙКИ (FALLBACK) =====
+      enabled: true
 
   datasource:
     url: jdbc:postgresql://localhost:5439/analyzer_db
@@ -44,8 +40,6 @@ spring:
       enable-auto-commit: false
       max-poll-records: 100
 
-server:
-  port: 0
 
 grpc:
   server:

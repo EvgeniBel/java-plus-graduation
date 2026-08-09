@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.aggregator.kafka.KafkaProducerService;
 import ru.practicum.aggregator.model.UserActionEvent;
+import ru.practicum.aggregator.util.ActionTypeUtils;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class AggregatorService {
     public synchronized void processUserAction(UserActionEvent action) {
         Long userId = action.getUserId();
         Long eventId = action.getEventId();
-        Integer newWeight = action.getActionType().getWeight();
+        Integer newWeight = ActionTypeUtils.getWeight(action.getActionType());
 
         log.info("Обработка действия: userId={}, eventId={}, weight={}", userId, eventId, newWeight);
 

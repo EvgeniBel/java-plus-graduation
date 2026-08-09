@@ -1,6 +1,6 @@
 spring:
   application:
-    name: collector
+    name: collector-service
   config:
     import: "configserver:"
   cloud:
@@ -13,3 +13,13 @@ spring:
         max-attempts: 6
         initial-interval: 1000
         multiplier: 1.1
+
+kafka:
+  topics:
+    user-actions: user-actions-topic
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics

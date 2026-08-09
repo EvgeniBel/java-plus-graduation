@@ -1,4 +1,4 @@
-package util;
+package ru.practicum.avro.util;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;

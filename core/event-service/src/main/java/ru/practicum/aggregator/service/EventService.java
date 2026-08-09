@@ -4,6 +4,7 @@ import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface EventService {
 
@@ -28,7 +29,7 @@ public interface EventService {
 
     List<EventShortDto> getEventsByPublicRequest(PublicEventRequestParam param);
 
-    EventFullDto getEventByIdByPublicRequest(Long eventId);
+    EventFullDto getEventByIdByPublicRequest(Long eventId, Long userId);  // ← Исправлено
 
     boolean eventExists(Long eventId);
 
@@ -37,4 +38,12 @@ public interface EventService {
     EventShortDto getEventShort(Long eventId);
 
     String getEventStatus(Long eventId);
+
+    // ===== МЕТОДЫ ДЛЯ РЕЙТИНГА =====
+
+    double getEventRating(Long eventId);
+
+    Map<Long, Double> getEventsRatings(List<Long> eventIds);
+
+    void sendViewAction(Long userId, Long eventId);
 }
