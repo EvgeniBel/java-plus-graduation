@@ -1,6 +1,6 @@
 spring:
   application:
-    name: aggregator-service
+    name: aggregator
   config:
     import: "optional:configserver:"
   cloud:
@@ -14,7 +14,6 @@ spring:
         initial-interval: 1000
         multiplier: 1.1
 
-# Локальные настройки (используются если Config Server недоступен)
 server:
   port: 8083
 

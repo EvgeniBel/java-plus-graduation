@@ -20,7 +20,7 @@ import java.util.stream.StreamSupport;
 @RequiredArgsConstructor
 public class AnalyzerGrpcClient {
 
-    @GrpcClient("analyzer-service")
+    @GrpcClient("analyzer")
     private AnalyzerControllerGrpc.AnalyzerControllerBlockingStub analyzerStub;
 
 

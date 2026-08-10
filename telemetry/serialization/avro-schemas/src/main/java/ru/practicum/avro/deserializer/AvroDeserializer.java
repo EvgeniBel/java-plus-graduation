@@ -26,15 +26,36 @@ public class AvroDeserializer<T extends SpecificRecordBase> implements Deseriali
     @Override
     @SuppressWarnings("unchecked")
     public void configure(Map<String, ?> configs, boolean isKey) {
-        if (configs != null && configs.containsKey("value.deserializer.class")) {
-            try {
-                String className = configs.get("value.deserializer.class").toString();
-                targetClass = (Class<T>) Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                log.error("Не найден класс для десериализации", e);
+        // Пытаемся получить класс из разных источников
+        if (configs != null) {
+            // 1. Из spring.deserializer.value.delegate.target.class
+            if (configs.containsKey("spring.deserializer.value.delegate.target.class")) {
+                try {
+                    String className = configs.get("spring.deserializer.value.delegate.target.class").toString();
+                    targetClass = (Class<T>) Class.forName(className);
+                    log.debug("Target class set from spring.deserializer.value.delegate.target.class: {}", className);
+                    return;
+                } catch (ClassNotFoundException e) {
+                    log.warn("Class not found: {}", configs.get("spring.deserializer.value.delegate.target.class"));
+                }
+            }
+
+            // 2. Из value.deserializer.class
+            if (configs.containsKey("value.deserializer.class")) {
+                try {
+                    String className = configs.get("value.deserializer.class").toString();
+                    targetClass = (Class<T>) Class.forName(className);
+                    log.debug("Target class set from value.deserializer.class: {}", className);
+                    return;
+                } catch (ClassNotFoundException e) {
+                    log.warn("Class not found: {}", configs.get("value.deserializer.class"));
+                }
             }
         }
-        log.debug("Инициализация Avro десериализатора для класса: {}", targetClass);
+
+        // 3. Fallback - определяем по топику
+        // Это будет установлено в deserialize()
+        log.warn("Target class not configured, will try to determine from topic");
     }
 
     @Override
@@ -45,8 +66,25 @@ public class AvroDeserializer<T extends SpecificRecordBase> implements Deseriali
         }
 
         try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+            // Если targetClass еще не установлен, определяем по топику
             if (targetClass == null) {
-                throw new SerializationException("Target class not configured");
+                if ("user-actions-topic".equals(topic) || topic.endsWith("user-actions")) {
+                    try {
+                        targetClass = (Class<T>) Class.forName("ru.practicum.ewm.stats.avro.UserActionAvro");
+                        log.info("Determined target class from topic {}: UserActionAvro", topic);
+                    } catch (ClassNotFoundException e) {
+                        throw new SerializationException("Cannot determine target class for topic: " + topic, e);
+                    }
+                } else if ("events-similarity-topic".equals(topic) || topic.endsWith("events-similarity")) {
+                    try {
+                        targetClass = (Class<T>) Class.forName("ru.practicum.ewm.stats.avro.EventSimilarityAvro");
+                        log.info("Determined target class from topic {}: EventSimilarityAvro", topic);
+                    } catch (ClassNotFoundException e) {
+                        throw new SerializationException("Cannot determine target class for topic: " + topic, e);
+                    }
+                } else {
+                    throw new SerializationException("Target class not configured and cannot be determined for topic: " + topic);
+                }
             }
 
             Schema schema = getSchema(targetClass);
@@ -54,8 +92,7 @@ public class AvroDeserializer<T extends SpecificRecordBase> implements Deseriali
             decoder = decoderFactory.binaryDecoder(in, decoder);
 
             T result = reader.read(null, decoder);
-            log.debug("Успешная десериализация из топика: {}, класс: {}, размер: {} байт",
-                    topic, targetClass.getSimpleName(), data.length);
+            log.debug("Успешная десериализация из топика: {}, класс: {}", topic, targetClass.getSimpleName());
             return result;
 
         } catch (IOException e) {

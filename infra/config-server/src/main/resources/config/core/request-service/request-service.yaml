@@ -23,7 +23,7 @@ spring:
 # ===== НАСТРОЙКИ ДЛЯ gRPC КЛИЕНТА =====
 grpc:
   client:
-    collector-service:
+    collector:
       address: 'discovery:///collector'
       enableKeepAlive: true
       keepAliveWithoutCalls: true

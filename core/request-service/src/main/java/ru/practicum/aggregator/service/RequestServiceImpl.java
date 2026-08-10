@@ -139,16 +139,16 @@ public class RequestServiceImpl implements RequestService {
      */
     private void sendRegistrationToCollector(Long userId, Long eventId) {
         try {
-            log.info("📤 Отправка регистрации в Collector: userId={}, eventId={}", userId, eventId);
+            log.info("Отправка регистрации в Collector: userId={}, eventId={}", userId, eventId);
             boolean success = collectorClient.sendUserAction(userId, eventId, ActionType.ACTION_REGISTER);
             if (success) {
-                log.info("✅ Регистрация отправлена: userId={}, eventId={}", userId, eventId);
+                log.info("Регистрация отправлена: userId={}, eventId={}", userId, eventId);
             } else {
-                log.warn("⚠️ Не удалось отправить регистрацию: userId={}, eventId={}", userId, eventId);
+                log.warn("Не удалось отправить регистрацию: userId={}, eventId={}", userId, eventId);
             }
         } catch (Exception e) {
-            log.error("❌ Ошибка отправки регистрации: userId={}, eventId={}", userId, eventId, e);
-            // Не бросаем исключение, чтобы не нарушить основной поток
+            log.error("Ошибка отправки регистрации: userId={}, eventId={}", userId, eventId, e);
+
         }
     }
 

@@ -30,14 +30,14 @@ spring:
 # ===== НАСТРОЙКИ ДЛЯ gRPC КЛИЕНТОВ =====
 grpc:
   client:
-    collector-service:
-      address: 'discovery:///collector-service'
+    collector:
+      address: 'discovery:///collector'
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: plaintext
       maxInboundMessageSize: 10485760
-    analyzer-service:
-      address: 'discovery:///analyzer-service'
+    analyzer:
+      address: 'discovery:///analyzer'
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: plaintext

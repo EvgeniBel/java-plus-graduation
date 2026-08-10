@@ -17,7 +17,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class CollectorGrpcClient {
 
-    @GrpcClient("collector-service")
+    @GrpcClient("collector")
     private CollectorControllerGrpc.CollectorControllerBlockingStub collectorStub;
 
     public boolean sendUserAction(Long userId, Long eventId, ActionType actionType, String timestamp) {
