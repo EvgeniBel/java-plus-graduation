@@ -1,5 +1,7 @@
 package ru.practicum.collector.grpc;
 
+import com.google.protobuf.Empty;
+import com.google.protobuf.Timestamp;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,13 +9,8 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.collector.kafka.KafkaProducerService;
 import ru.practicum.collector.mapper.UserActionMapper;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.Empty;
 import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 import ru.practicum.ewm.stats.proto.UserActionProto;
-import ru.practicum.telemetry.messages.ActionType;
-import ru.practicum.telemetry.messages.UserAction;
-
-import java.time.Instant;
 
 @Slf4j
 @GrpcService
@@ -26,40 +23,46 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
     @Override
     public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
         try {
-            log.info("Получено действие через UserActionController: userId={}, eventId={}, actionType={}, timestamp={}",
+            log.info("Получено действие пользователя: userId={}, eventId={}, actionType={}, timestamp={}",
                     request.getUserId(),
                     request.getEventId(),
                     request.getActionType(),
-                    request.getTimestamp());
+                    request.hasTimestamp() ? request.getTimestamp() : null);
 
-            UserAction action = convertToTelemetryAction(request);
-            var avroAction = userActionMapper.toAvro(action);
+            validateRequest(request);
+
+            var avroAction = userActionMapper.toAvro(request);
+
             kafkaProducerService.sendUserAction(avroAction);
 
             responseObserver.onNext(Empty.newBuilder().build());
             responseObserver.onCompleted();
 
+        } catch (IllegalArgumentException e) {
+            log.error("Ошибка валидации: {}", e.getMessage());
+            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
         } catch (Exception e) {
-            log.error("Ошибка обработки действия: {}", e.getMessage(), e);
-            responseObserver.onError(e);
+            log.error("Ошибка обработки действия пользователя: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("Внутренняя ошибка сервера")
+                    .asRuntimeException());
         }
     }
 
-    private UserAction convertToTelemetryAction(UserActionProto proto) {
-        return UserAction.newBuilder()
-                .setUserId(proto.getUserId())
-                .setEventId(proto.getEventId())
-                .setActionType(convertActionType(proto.getActionType()))
-                .setTimestamp(proto.getTimestamp())
-                .build();
-    }
-
-    private ActionType convertActionType(ActionTypeProto protoType) {
-        return switch (protoType) {
-            case ACTION_VIEW -> ActionType.ACTION_VIEW;
-            case ACTION_REGISTER -> ActionType.ACTION_REGISTER;
-            case ACTION_LIKE -> ActionType.ACTION_LIKE;
-            default -> ActionType.ACTION_UNKNOWN;
-        };
+    private void validateRequest(UserActionProto request) {
+        if (request.getUserId() <= 0) {
+            throw new IllegalArgumentException("userId должен быть положительным числом");
+        }
+        if (request.getEventId() <= 0) {
+            throw new IllegalArgumentException("eventId должен быть положительным числом");
+        }
+        if (!request.hasTimestamp()) {
+            throw new IllegalArgumentException("timestamp обязателен");
+        }
+        if (request.getActionType() == ActionTypeProto.ACTION_UNKNOWN) {
+            throw new IllegalArgumentException("Некорректный тип действия");
+        }
     }
 }

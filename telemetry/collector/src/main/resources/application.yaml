@@ -14,9 +14,13 @@ spring:
         initial-interval: 1000
         multiplier: 1.1
 
+grpc:
+  server:
+    port: 0
+
 kafka:
   topics:
-    user-actions: user-actions-topic
+    user-actions: stats.user-actions.v1
 
 management:
   endpoints:
