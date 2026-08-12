@@ -1,5 +1,6 @@
 package ru.practicum.collector.grpc;
 
+import ru.practicum.ewm.stats.proto.Empty;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +8,6 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.collector.kafka.KafkaProducerService;
 import ru.practicum.collector.mapper.UserActionMapper;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.Empty;
 import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 
@@ -60,7 +60,14 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
         if (!request.hasTimestamp()) {
             throw new IllegalArgumentException("timestamp обязателен");
         }
-        if (request.getActionType() == ActionTypeProto.ACTION_UNKNOWN) {
+        // Проверка типа действия - теперь ACTION_VIEW = 0
+        if (request.getActionType() == ActionTypeProto.ACTION_VIEW) {
+            // OK
+        } else if (request.getActionType() == ActionTypeProto.ACTION_REGISTER) {
+            // OK
+        } else if (request.getActionType() == ActionTypeProto.ACTION_LIKE) {
+
+        } else {
             throw new IllegalArgumentException("Некорректный тип действия");
         }
     }

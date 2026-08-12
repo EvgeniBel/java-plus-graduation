@@ -136,7 +136,6 @@ public class RequestServiceImpl implements RequestService {
             }
         } catch (Exception e) {
             log.error("Ошибка отправки регистрации: userId={}, eventId={}", userId, eventId, e);
-
         }
     }
 

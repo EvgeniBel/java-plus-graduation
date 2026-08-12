@@ -9,6 +9,8 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -26,35 +28,19 @@ public class AvroDeserializer<T extends SpecificRecordBase> implements Deseriali
     @Override
     @SuppressWarnings("unchecked")
     public void configure(Map<String, ?> configs, boolean isKey) {
-        // Пытаемся получить класс из разных источников
         if (configs != null) {
-            // 1. Из spring.deserializer.value.delegate.target.class
+            // Пытаемся получить класс из конфигурации
             if (configs.containsKey("spring.deserializer.value.delegate.target.class")) {
                 try {
                     String className = configs.get("spring.deserializer.value.delegate.target.class").toString();
                     targetClass = (Class<T>) Class.forName(className);
-                    log.debug("Target class set from spring.deserializer.value.delegate.target.class: {}", className);
+                    log.info("Target class set from config: {}", className);
                     return;
                 } catch (ClassNotFoundException e) {
                     log.warn("Class not found: {}", configs.get("spring.deserializer.value.delegate.target.class"));
                 }
             }
-
-            // 2. Из value.deserializer.class
-            if (configs.containsKey("value.deserializer.class")) {
-                try {
-                    String className = configs.get("value.deserializer.class").toString();
-                    targetClass = (Class<T>) Class.forName(className);
-                    log.debug("Target class set from value.deserializer.class: {}", className);
-                    return;
-                } catch (ClassNotFoundException e) {
-                    log.warn("Class not found: {}", configs.get("value.deserializer.class"));
-                }
-            }
         }
-
-        // 3. Fallback - определяем по топику
-        // Это будет установлено в deserialize()
         log.warn("Target class not configured, will try to determine from topic");
     }
 
@@ -68,14 +54,14 @@ public class AvroDeserializer<T extends SpecificRecordBase> implements Deseriali
         try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
             // Если targetClass еще не установлен, определяем по топику
             if (targetClass == null) {
-                if ("user-actions-topic".equals(topic) || topic.endsWith("user-actions")) {
+                if (topic.startsWith("stats.user-actions") || topic.contains("user-actions")) {
                     try {
                         targetClass = (Class<T>) Class.forName("ru.practicum.ewm.stats.avro.UserActionAvro");
                         log.info("Determined target class from topic {}: UserActionAvro", topic);
                     } catch (ClassNotFoundException e) {
                         throw new SerializationException("Cannot determine target class for topic: " + topic, e);
                     }
-                } else if ("events-similarity-topic".equals(topic) || topic.endsWith("events-similarity")) {
+                } else if (topic.startsWith("stats.events-similarity") || topic.contains("events-similarity")) {
                     try {
                         targetClass = (Class<T>) Class.forName("ru.practicum.ewm.stats.avro.EventSimilarityAvro");
                         log.info("Determined target class from topic {}: EventSimilarityAvro", topic);

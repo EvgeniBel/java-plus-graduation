@@ -7,8 +7,6 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 
-import java.time.Instant;
-
 @Component
 public class UserActionMapper {
 
@@ -30,7 +28,7 @@ public class UserActionMapper {
             case ACTION_VIEW -> ActionTypeAvro.VIEW;
             case ACTION_REGISTER -> ActionTypeAvro.REGISTER;
             case ACTION_LIKE -> ActionTypeAvro.LIKE;
-            default -> ActionTypeAvro.VIEW; // fallback
+            default -> ActionTypeAvro.VIEW;
         };
     }
 }

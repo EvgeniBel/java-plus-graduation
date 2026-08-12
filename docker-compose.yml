@@ -1,6 +1,4 @@
 services:
-  # ==================== БАЗЫ ДАННЫХ ====================
-
   postgres-stats:
     image: postgres:15
     container_name: postgres-stats
@@ -12,11 +10,6 @@ services:
       - "5434:5432"
     volumes:
       - postgres-stats-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-stats-server"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
@@ -32,11 +25,6 @@ services:
       - "5435:5432"
     volumes:
       - postgres-event-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-event-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
@@ -52,11 +40,6 @@ services:
       - "5436:5432"
     volumes:
       - postgres-comment-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-comment-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
@@ -72,11 +55,6 @@ services:
       - "5437:5432"
     volumes:
       - postgres-request-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-request-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
@@ -92,11 +70,6 @@ services:
       - "5438:5432"
     volumes:
       - postgres-user-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-user-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
@@ -113,18 +86,11 @@ services:
     volumes:
       - postgres-analyzer-data:/var/lib/postgresql/data
       - ./telemetry/analyzer/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U analyzer_user -d analyzer_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
 
-  # ==================== KAFKA ====================
-
-  zookeeper:  # ← Закрывающая фигурная скобка здесь
+  zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     environment:
@@ -132,11 +98,11 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    restart: unless-stopped
     networks:
       - ewm-network
-    restart: unless-stopped
 
-  kafka:  # ← НА ОДНОМ УРОВНЕ С zookeeper
+  kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     depends_on:
@@ -145,6 +111,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -152,29 +119,24 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
       - "9092:9092"
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    restart: unless-stopped
     networks:
       - ewm-network
-    restart: unless-stopped
 
-  kafka-ui:  # ← НА ОДНОМ УРОВНЕ С zookeeper
+  kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
       - kafka
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: localhost:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     ports:
       - "8085:8080"
+    restart: unless-stopped
     networks:
       - ewm-network
-    restart: unless-stopped
 
 volumes:
   postgres-stats-data:

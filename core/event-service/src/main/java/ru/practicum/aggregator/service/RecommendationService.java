@@ -3,6 +3,7 @@ package ru.practicum.aggregator.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import ru.practicum.aggregator.mapper.RecommendedEventMapper;
 import ru.practicum.dto.event.RecommendedEventDto;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
@@ -50,7 +51,6 @@ public class RecommendationService {
             log.error("Ошибка отправки лайка: userId={}, eventId={}", userId, eventId, e);
         }
     }
-
 
     public void sendRegisterAction(Long userId, Long eventId) {
         try {

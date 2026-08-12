@@ -3,7 +3,6 @@ package ru.practicum.analyzer.kafka;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -31,21 +30,18 @@ public class UserActionsConsumerService {
     public void consumeUserAction(
             @Payload UserActionAvro action,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            Acknowledgment acknowledgment) {
+            @Header(KafkaHeaders.OFFSET) long offset) {  // ← Убрали Acknowledgment
 
         try {
             log.info("Получено действие пользователя: userId={}, eventId={}, actionType={}, timestamp={}",
                     action.getUserId(), action.getEventId(), action.getActionType(), action.getTimestamp());
 
-            // Проверяем, существует ли уже запись для этого пользователя и мероприятия
             var existingAction = userActionRepository.findByUserIdAndEventId(
                     action.getUserId(), action.getEventId());
 
             int newWeight = ActionTypeUtils.getWeight(action.getActionType());
 
             if (existingAction.isPresent()) {
-                // Обновляем существующую запись, если новый вес больше
                 UserAction userAction = existingAction.get();
                 if (newWeight > userAction.getWeight()) {
                     userAction.setActionType(action.getActionType());
@@ -60,7 +56,6 @@ public class UserActionsConsumerService {
                             action.getUserId(), action.getEventId(), userAction.getWeight(), newWeight);
                 }
             } else {
-                // Создаем новую запись
                 UserAction userAction = UserAction.builder()
                         .userId(action.getUserId())
                         .eventId(action.getEventId())
@@ -74,12 +69,10 @@ public class UserActionsConsumerService {
                         action.getUserId(), action.getEventId());
             }
 
-            acknowledgment.acknowledge();
             log.debug("Обработано сообщение: partition={}, offset={}", partition, offset);
 
         } catch (Exception e) {
             log.error("Ошибка обработки UserAction: {}", e.getMessage(), e);
-            // Не подтверждаем, чтобы сообщение было обработано снова
         }
     }
 }

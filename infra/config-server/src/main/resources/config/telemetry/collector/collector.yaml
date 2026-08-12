@@ -41,7 +41,7 @@ eureka:
 
 kafka:
   topics:
-    user-actions: user-actions-topic
+    user-actions: stats.user-actions.v1
 
 management:
   endpoints:

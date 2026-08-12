@@ -22,13 +22,11 @@ kafka:
   consumer:
     group-id: aggregator-group
     key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    value-deserializer: ru.practicum.avro.deserializer.AvroDeserializer
     auto-offset-reset: earliest
     enable-auto-commit: false
     max-poll-records: 100
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: ru.practicum.avro.serializer.AvroSerializer
     acks: all
     retries: 3
     enable-idempotence: true

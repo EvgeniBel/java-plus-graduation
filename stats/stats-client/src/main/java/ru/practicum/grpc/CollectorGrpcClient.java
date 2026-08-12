@@ -30,8 +30,8 @@ public class CollectorGrpcClient {
                     .setTimestamp(timestamp)
                     .build();
 
-            log.info("Отправка действия в Collector: userId={}, eventId={}, actionType={}, timestamp={}",
-                    userId, eventId, actionType, timestamp);
+            log.info("Отправка действия в Collector: userId={}, eventId={}, actionType={}",
+                    userId, eventId, actionType);
 
             Empty response = collectorStub.collectUserAction(request);
 

@@ -12,7 +12,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
-import ru.practicum.avro.deserializer.AvroDeserializer;
+import ru.practicum.avro.deserializer.EventSimilarityDeserializer;  // ← ИЗМЕНЕНО
+import ru.practicum.avro.deserializer.UserActionDeserializer;      // ← ИЗМЕНЕНО
+import ru.practicum.avro.serializer.AvroSerializer;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.*;
+import ru.practicum.avro.deserializer.UserActionDeserializer;  // ← Импорт
 import ru.practicum.avro.serializer.AvroSerializer;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
@@ -35,7 +55,7 @@ public class KafkaConsumerConfig {
     public static class Consumer {
         private String groupId = "aggregator-group";
         private String keyDeserializer = StringDeserializer.class.getName();
-        private String valueDeserializer = AvroDeserializer.class.getName();
+        private String valueDeserializer = UserActionDeserializer.class.getName();  // ← ИЗМЕНЕНО
         private String autoOffsetReset = "earliest";
         private boolean enableAutoCommit = false;
         private int maxPollRecords = 100;
@@ -53,31 +73,33 @@ public class KafkaConsumerConfig {
         private int lingerMs = 10;
     }
 
+    // ===== CONSUMER для UserActionAvro =====
 
     @Bean
-    public ConsumerFactory<String, UserActionAvro> consumerFactory() {
+    public ConsumerFactory<String, UserActionAvro> userActionConsumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, consumer.getGroupId());
-        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, consumer.getKeyDeserializer());
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, consumer.getValueDeserializer());
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, consumer.getAutoOffsetReset());
-        config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, consumer.isEnableAutoCommit());
-        config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, consumer.getMaxPollRecords());
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, consumer.getGroupId() + "-user-actions");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, UserActionDeserializer.class.getName());  // ← ИЗМЕНЕНО
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
 
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, UserActionAvro>
-    kafkaListenerContainerFactory(ConsumerFactory<String, UserActionAvro> consumerFactory) {
+    userActionKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, UserActionAvro> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory);
+        factory.setConsumerFactory(userActionConsumerFactory());
         factory.setBatchListener(false);
         return factory;
     }
 
+    // ===== PRODUCER для EventSimilarityAvro =====
 
     @Bean
     public ProducerFactory<String, EventSimilarityAvro> producerFactory() {
