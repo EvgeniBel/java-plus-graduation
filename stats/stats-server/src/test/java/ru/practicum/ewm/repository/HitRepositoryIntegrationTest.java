@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -52,12 +53,14 @@ class HitRepositoryIntegrationTest {
                 Arrays.asList("/test1", "/test2")
         );
 
+        assertNotNull(stats);
         assertEquals(2, stats.size());
 
         StatResponseDto stat1 = stats.stream()
                 .filter(s -> "/test1".equals(s.getUri()))
                 .findFirst()
                 .orElse(null);
+        assertNotNull(stat1);
         assertEquals("app1", stat1.getApp());
         assertEquals(2L, stat1.getHits());
 
@@ -65,6 +68,7 @@ class HitRepositoryIntegrationTest {
                 .filter(s -> "/test2".equals(s.getUri()))
                 .findFirst()
                 .orElse(null);
+        assertNotNull(stat2);
         assertEquals("app2", stat2.getApp());
         assertEquals(1L, stat2.getHits());
     }
@@ -83,8 +87,10 @@ class HitRepositoryIntegrationTest {
                 Arrays.asList("/test1")
         );
 
+        assertNotNull(stats);
         assertEquals(1, stats.size());
         assertEquals(3L, stats.get(0).getHits());
+        assertEquals("/test1", stats.get(0).getUri());
     }
 
     @Test
@@ -100,6 +106,7 @@ class HitRepositoryIntegrationTest {
                 null
         );
 
+        assertNotNull(stats);
         assertEquals(2, stats.size());
     }
 
@@ -116,6 +123,43 @@ class HitRepositoryIntegrationTest {
                 Arrays.asList("/test1")
         );
 
+        assertNotNull(stats);
+        assertEquals(1, stats.size());
+        assertEquals(1L, stats.get(0).getHits());
+        assertEquals("/test1", stats.get(0).getUri());
+    }
+
+    @Test
+    void testFindNonUniqueStatsWithEmptyUriList() {
+        Hit hit1 = createHit("app1", "/test1", "192.168.1.1", baseTime);
+        Hit hit2 = createHit("app1", "/test2", "192.168.1.1", baseTime.plusMinutes(1));
+
+        hitRepository.saveAll(Arrays.asList(hit1, hit2));
+
+        List<StatResponseDto> stats = hitRepository.findNonUniqueStats(
+                baseTime.minusMinutes(1),
+                baseTime.plusMinutes(5),
+                null
+        );
+
+        assertNotNull(stats);
+        assertEquals(2, stats.size());
+    }
+
+    @Test
+    void testFindNonUniqueStatsWithDateRange() {
+        Hit hit1 = createHit("app1", "/test1", "192.168.1.1", baseTime);
+        Hit hit2 = createHit("app1", "/test1", "192.168.1.1", baseTime.plusDays(1));
+
+        hitRepository.saveAll(Arrays.asList(hit1, hit2));
+
+        List<StatResponseDto> stats = hitRepository.findNonUniqueStats(
+                baseTime.minusMinutes(1),
+                baseTime.plusMinutes(30),
+                Arrays.asList("/test1")
+        );
+
+        assertNotNull(stats);
         assertEquals(1, stats.size());
         assertEquals(1L, stats.get(0).getHits());
     }
