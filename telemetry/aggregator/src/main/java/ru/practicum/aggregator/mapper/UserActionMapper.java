@@ -12,7 +12,7 @@ public class UserActionMapper {
         return UserActionEvent.builder()
                 .userId(avro.getUserId())
                 .eventId(avro.getEventId())
-                .actionType(ActionTypeAvro.valueOf(avro.getActionType()))
+                .actionType(avro.getActionType())
                 .timestamp(avro.getTimestamp())
                 .build();
     }

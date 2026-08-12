@@ -25,54 +25,45 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id:analyzer-group}")
     private String groupId;
 
-    // ===== CONSUMER для UserActionAvro =====
-
     @Bean
     public ConsumerFactory<String, UserActionAvro> userActionConsumerFactory() {
-        Map<String, Object> config = new HashMap<>();
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-user-actions");
-        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, UserActionDeserializer.class);  // ← ИЗМЕНЕНО
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
-
-        return new DefaultKafkaConsumerFactory<>(config);
+        return createConsumerFactory(groupId + "-user-actions", UserActionDeserializer.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, UserActionAvro>
     userActionKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, UserActionAvro> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(userActionConsumerFactory());
-        factory.setBatchListener(false);
-        return factory;
+        return createContainerFactory(userActionConsumerFactory());
     }
-
-    // ===== CONSUMER для EventSimilarityAvro =====
 
     @Bean
     public ConsumerFactory<String, EventSimilarityAvro> eventSimilarityConsumerFactory() {
-        Map<String, Object> config = new HashMap<>();
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-similarity");
-        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventSimilarityDeserializer.class);  // ← ИЗМЕНЕНО
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
-
-        return new DefaultKafkaConsumerFactory<>(config);
+        return createConsumerFactory(groupId + "-similarity", EventSimilarityDeserializer.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, EventSimilarityAvro>
     eventSimilarityKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, EventSimilarityAvro> factory =
+        return createContainerFactory(eventSimilarityConsumerFactory());
+    }
+
+    private <T> ConsumerFactory<String, T> createConsumerFactory(String groupId, Class<?> deserializer) {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    private <T> ConcurrentKafkaListenerContainerFactory<String, T> createContainerFactory(
+            ConsumerFactory<String, T> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, T> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(eventSimilarityConsumerFactory());
+        factory.setConsumerFactory(consumerFactory);
         factory.setBatchListener(false);
         return factory;
     }

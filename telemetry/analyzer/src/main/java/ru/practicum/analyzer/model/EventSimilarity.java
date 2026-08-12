@@ -13,9 +13,13 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "event_similarities", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"event_a", "event_b"})
-})
+@Table(name = "event_similarities",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"event_a", "event_b"}),
+        indexes = {
+                @Index(name = "idx_event_similarities_event_a", columnList = "event_a"),
+                @Index(name = "idx_event_similarities_event_b", columnList = "event_b"),
+                @Index(name = "idx_event_similarities_score", columnList = "score DESC")
+        })
 public class EventSimilarity {
 
     @Id
