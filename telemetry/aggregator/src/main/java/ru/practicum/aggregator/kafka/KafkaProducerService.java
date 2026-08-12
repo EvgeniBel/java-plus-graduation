@@ -4,11 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
-
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -18,40 +15,30 @@ public class KafkaProducerService {
     private final KafkaTemplate<String, EventSimilarityAvro> kafkaTemplate;
 
     @Value("${kafka.topics.events-similarity}")
-    private String similarityTopic;
+    private String topic;
 
     public void sendSimilarity(Long eventA, Long eventB, double score, long timestamp) {
         try {
             long first = Math.min(eventA, eventB);
             long second = Math.max(eventA, eventB);
 
-            EventSimilarityAvro similarity = EventSimilarityAvro.newBuilder()
+            EventSimilarityAvro event = EventSimilarityAvro.newBuilder()
                     .setEventA(first)
                     .setEventB(second)
                     .setScore(score)
                     .setTimestamp(timestamp)
                     .build();
 
-            String key = first + "-" + second;
+            kafkaTemplate.send(topic, first + "-" + second, event)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("Ошибка отправки: {}", ex.getMessage(), ex);
+                        }
+                    });
 
-            log.info("Отправка сходства в Kafka: topic={}, eventA={}, eventB={}, score={}",
-                    similarityTopic, first, second, score);
-
-            CompletableFuture<SendResult<String, EventSimilarityAvro>> future =
-                    kafkaTemplate.send(similarityTopic, key, similarity);
-
-            future.whenComplete((result, ex) -> {
-                if (ex == null) {
-                    log.debug("Сходство отправлено: eventA={}, eventB={}, offset={}",
-                            first, second, result.getRecordMetadata().offset());
-                } else {
-                    log.error("Ошибка отправки сходства: {}", ex.getMessage(), ex);
-                }
-            });
-
+            log.debug("Отправлено сходство: ({}, {}) = {}", first, second, score);
         } catch (Exception e) {
-            log.error("Критическая ошибка при отправке сходства: {}", e.getMessage(), e);
-            throw new RuntimeException("Ошибка отправки в Kafka", e);
+            log.error("Критическая ошибка: {}", e.getMessage(), e);
         }
     }
 }

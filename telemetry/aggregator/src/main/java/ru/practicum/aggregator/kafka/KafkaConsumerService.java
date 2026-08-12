@@ -4,9 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import ru.practicum.aggregator.model.UserActionEvent;
-import ru.practicum.aggregator.service.AggregatorService;
 import ru.practicum.aggregator.mapper.UserActionMapper;
+import ru.practicum.aggregator.service.AggregatorService;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 @Slf4j
@@ -15,24 +14,19 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 public class KafkaConsumerService {
 
     private final AggregatorService aggregatorService;
-    private final UserActionMapper userActionMapper;
+    private final UserActionMapper mapper;
 
     @KafkaListener(
             topics = "${kafka.topics.user-actions}",
-            containerFactory = "userActionKafkaListenerContainerFactory"
+            containerFactory = "listenerContainerFactory"
     )
-    public void consumeUserAction(UserActionAvro action) {
+    public void consume(UserActionAvro action) {
         try {
-            log.info("Получено действие из Kafka: userId={}, eventId={}, actionType={}",
-                    action.getUserId(),
-                    action.getEventId(),
-                    action.getActionType());
-
-            UserActionEvent event = userActionMapper.toModel(action);
-            aggregatorService.processUserAction(event);
-
+            log.info("Получено действие: userId={}, eventId={}, type={}",
+                    action.getUserId(), action.getEventId(), action.getActionType());
+            aggregatorService.process(mapper.toModel(action));
         } catch (Exception e) {
-            log.error("Ошибка обработки UserAction: {}", e.getMessage(), e);
+            log.error("Ошибка обработки: {}", e.getMessage(), e);
         }
     }
 }

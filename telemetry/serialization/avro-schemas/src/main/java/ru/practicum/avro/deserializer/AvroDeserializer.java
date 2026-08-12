@@ -9,6 +9,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
+import ru.practicum.avro.util.AvroUtils;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
@@ -90,13 +91,7 @@ public class AvroDeserializer<T extends SpecificRecordBase> implements Deseriali
     }
 
     private Schema getSchema(Class<T> clazz) {
-        return schemaCache.computeIfAbsent(clazz, c -> {
-            try {
-                return (Schema) c.getMethod("getClassSchema").invoke(null);
-            } catch (Exception e) {
-                throw new SerializationException("Ошибка получения схемы для класса: " + clazz, e);
-            }
-        });
+        return schemaCache.computeIfAbsent(clazz, AvroUtils::getSchema);
     }
 
     @Override
