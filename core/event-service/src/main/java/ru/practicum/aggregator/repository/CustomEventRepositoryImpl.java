@@ -89,7 +89,6 @@ public class CustomEventRepositoryImpl implements CustomEventRepository {
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
 
-        // Применяем сортировку
         if (param.getSort() != null) {
             switch (param.getSort()) {
                 case "VIEWS" -> {

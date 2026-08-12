@@ -1,7 +1,5 @@
 package ru.practicum.collector.grpc;
 
-import com.google.protobuf.Empty;
-import com.google.protobuf.Timestamp;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +7,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.collector.kafka.KafkaProducerService;
 import ru.practicum.collector.mapper.UserActionMapper;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.Empty;
 import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 

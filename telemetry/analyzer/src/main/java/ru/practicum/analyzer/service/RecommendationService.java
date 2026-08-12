@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.analyzer.model.EventSimilarity;
-import ru.practicum.analyzer.model.UserMaxWeight;
 import ru.practicum.analyzer.repository.EventSimilarityRepository;
 import ru.practicum.analyzer.repository.UserActionRepository;
 
@@ -16,174 +15,92 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationService {
 
-    private static final int DEFAULT_NEIGHBORS = 5;
-    private static final int DEFAULT_RECENT_ACTIONS = 10;
-
     private final UserActionRepository userActionRepository;
-    private final EventSimilarityRepository similarityRepository;
+    private final EventSimilarityRepository eventSimilarityRepository;
 
-    public List<RecommendedEvent> getRecommendationsForUser(Long userId, int maxResults) {
-        log.info("Генерация рекомендаций для пользователя: {}, maxResults={}", userId, maxResults);
+    /**
+     * Получение списка рекомендуемых мероприятий для пользователя
+     */
+    public List<Map.Entry<Long, Double>> getRecommendationsForUser(Long userId, int maxResults) {
+        log.info("Получение рекомендаций для пользователя: userId={}, maxResults={}", userId, maxResults);
 
-        // Шаг 1: Получаем последние N взаимодействий пользователя
-        List<UserMaxWeight> recentActions = userActionRepository.findRecentByUserId(userId);
-
-        if (recentActions.isEmpty()) {
-            log.info("У пользователя {} нет взаимодействий", userId);
+        // 1. Получаем все мероприятия, с которыми взаимодействовал пользователь
+        List<Long> userEventIds = userActionRepository.findEventIdsByUserId(userId);
+        if (userEventIds.isEmpty()) {
+            log.warn("Пользователь {} не взаимодействовал ни с одним мероприятием", userId);
             return Collections.emptyList();
         }
 
-        // Шаг 2: Находим похожие мероприятия
-        Set<Long> userEventIds = recentActions.stream()
-                .map(UserMaxWeight::getEventId)
-                .collect(Collectors.toSet());
+        // 2. Получаем сходства для всех мероприятий пользователя
+        Map<Long, Double> recommendations = new HashMap<>();
+        for (Long eventId : userEventIds) {
+            List<EventSimilarity> similarities = eventSimilarityRepository.findSimilarEventsByEventId(eventId);
+            for (EventSimilarity similarity : similarities) {
+                Long similarEventId = similarity.getEventA().equals(eventId)
+                        ? similarity.getEventB()
+                        : similarity.getEventA();
 
-        // Шаг 3: Для каждого просмотренного мероприятия ищем похожие
-        Map<Long, Double> candidateScores = new HashMap<>();
-
-        for (UserMaxWeight action : recentActions) {
-            Long eventId = action.getEventId();
-            List<EventSimilarity> similarities = similarityRepository.findByEventId(eventId);
-
-            for (EventSimilarity sim : similarities) {
-                Long similarEventId = sim.getEventAId().equals(eventId)
-                        ? sim.getEventBId() : sim.getEventAId();
-
-                // Исключаем уже просмотренные
-                if (userEventIds.contains(similarEventId)) {
-                    continue;
+                // Исключаем мероприятия, с которыми пользователь уже взаимодействовал
+                if (!userEventIds.contains(similarEventId)) {
+                    // Суммируем оценки сходства (можно использовать среднее или максимум)
+                    recommendations.merge(similarEventId, similarity.getScore(), Double::sum);
                 }
-
-                // Суммируем оценки
-                candidateScores.merge(similarEventId, sim.getSimilarityScore(), Double::sum);
             }
         }
 
-        if (candidateScores.isEmpty()) {
-            log.info("Нет кандидатов для рекомендаций пользователю {}", userId);
-            return Collections.emptyList();
-        }
-
-        // Шаг 4: Сортируем и выбираем топ N
-        return candidateScores.entrySet().stream()
+        // 3. Сортируем по убыванию оценки и ограничиваем количество
+        return recommendations.entrySet().stream()
                 .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
                 .limit(maxResults)
-                .map(entry -> {
-                    // Вычисляем предсказанную оценку
-                    double predictedScore = predictScore(userId, entry.getKey(), entry.getValue());
-                    return new RecommendedEvent(entry.getKey(), predictedScore);
-                })
                 .collect(Collectors.toList());
     }
 
-    private double predictScore(Long userId, Long targetEventId, double baseScore) {
-        // 1. Находим K ближайших соседей
-        List<EventSimilarity> neighbors = similarityRepository.findByEventId(targetEventId)
-                .stream()
-                .sorted((a, b) -> Double.compare(b.getSimilarityScore(), a.getSimilarityScore()))
-                .limit(DEFAULT_NEIGHBORS)
-                .collect(Collectors.toList());
+    /**
+     * Получение списка мероприятий, похожих на указанное
+     */
+    public List<Map.Entry<Long, Double>> getSimilarEvents(Long eventId, Long userId, int maxResults) {
+        log.info("Получение похожих мероприятий: eventId={}, userId={}, maxResults={}", eventId, userId, maxResults);
 
-        if (neighbors.isEmpty()) {
-            return baseScore;
-        }
+        // 1. Получаем мероприятия, с которыми пользователь уже взаимодействовал
+        List<Long> userEventIds = userId != null && userId > 0
+                ? userActionRepository.findEventIdsByUserId(userId)
+                : Collections.emptyList();
 
-        // 2. Получаем оценки пользователя для соседей
-        List<Long> neighborIds = neighbors.stream()
-                .map(sim -> sim.getEventAId().equals(targetEventId)
-                        ? sim.getEventBId() : sim.getEventAId())
-                .collect(Collectors.toList());
-
-        List<Object[]> userWeights = userActionRepository.findUserWeightsForEvents(userId, neighborIds);
-        Map<Long, Integer> userRatings = userWeights.stream()
-                .collect(Collectors.toMap(
-                        arr -> (Long) arr[0],
-                        arr -> (Integer) arr[1]
-                ));
-
-        // 3. Вычисляем взвешенную сумму
-        double weightedSum = 0.0;
-        double similaritySum = 0.0;
-
-        for (EventSimilarity neighbor : neighbors) {
-            Long neighborId = neighbor.getEventAId().equals(targetEventId)
-                    ? neighbor.getEventBId() : neighbor.getEventAId();
-
-            Integer rating = userRatings.get(neighborId);
-            if (rating != null) {
-                weightedSum += neighbor.getSimilarityScore() * rating;
-                similaritySum += neighbor.getSimilarityScore();
-            }
-        }
-
-        if (similaritySum == 0) {
-            return baseScore;
-        }
-
-        return weightedSum / similaritySum;
-    }
-
-    public List<RecommendedEvent> getSimilarEvents(Long eventId, Long userId, int maxResults) {
-        log.info("Поиск похожих мероприятий: eventId={}, userId={}, maxResults={}",
-                eventId, userId, maxResults);
-
-        // 1. Получаем все похожие мероприятия
-        List<EventSimilarity> similarities = similarityRepository.findByEventId(eventId);
-
-        if (similarities.isEmpty()) {
-            log.info("Нет похожих мероприятий для eventId={}", eventId);
-            return Collections.emptyList();
-        }
-
-        // 2. Получаем просмотренные пользователем мероприятия
-        List<Long> userEventIds = userActionRepository.findEventIdsByUserId(userId);
+        // 2. Получаем сходства для указанного мероприятия
+        List<EventSimilarity> similarities = eventSimilarityRepository.findSimilarEventsByEventId(eventId);
 
         // 3. Фильтруем и сортируем
         return similarities.stream()
-                .map(sim -> {
-                    Long similarEventId = sim.getEventAId().equals(eventId)
-                            ? sim.getEventBId() : sim.getEventAId();
-                    return Map.entry(similarEventId, sim.getSimilarityScore());
+                .filter(s -> {
+                    Long similarEventId = s.getEventA().equals(eventId) ? s.getEventB() : s.getEventA();
+                    return !userEventIds.contains(similarEventId);
                 })
-                .filter(entry -> !userEventIds.contains(entry.getKey()))
+                .map(s -> {
+                    Long similarEventId = s.getEventA().equals(eventId) ? s.getEventB() : s.getEventA();
+                    return Map.entry(similarEventId, s.getScore());
+                })
                 .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
                 .limit(maxResults)
-                .map(entry -> new RecommendedEvent(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }
 
-    public List<RecommendedEvent> getInteractionsCount(List<Long> eventIds) {
-        log.info("Получение суммы весов для {} мероприятий", eventIds.size());
+    /**
+     * Получение суммы взаимодействий для указанных мероприятий
+     */
+    public Map<Long, Long> getInteractionsCount(List<Long> eventIds) {
+        log.info("Получение количества взаимодействий для событий: {}", eventIds);
 
         if (eventIds == null || eventIds.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
-        List<Object[]> results = userActionRepository.sumWeightsByEvents(eventIds);
-
-        return results.stream()
-                .map(arr -> new RecommendedEvent(
-                        (Long) arr[0],
-                        ((Number) arr[1]).doubleValue()
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public static class RecommendedEvent {
-        private final Long eventId;
-        private final Double score;
-
-        public RecommendedEvent(Long eventId, Double score) {
-            this.eventId = eventId;
-            this.score = score;
+        // Для каждого мероприятия получаем сумму весов
+        Map<Long, Long> result = new HashMap<>();
+        for (Long eventId : eventIds) {
+            Long sum = userActionRepository.sumWeightsByEventIds(Collections.singletonList(eventId));
+            result.put(eventId, sum != null ? sum : 0L);
         }
 
-        public Long getEventId() {
-            return eventId;
-        }
-
-        public Double getScore() {
-            return score;
-        }
+        return result;
     }
 }

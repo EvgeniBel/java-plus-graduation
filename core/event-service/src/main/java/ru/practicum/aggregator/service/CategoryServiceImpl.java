@@ -6,14 +6,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.dto.category.NewCategoryRequest;
-import ru.practicum.exception.ConflictException;
-import ru.practicum.exception.NotFoundException;
 import ru.practicum.aggregator.collector.mapper.CategoryMapper;
 import ru.practicum.aggregator.model.Category;
 import ru.practicum.aggregator.repository.CategoryRepository;
 import ru.practicum.aggregator.repository.EventRepository;
+import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.category.NewCategoryRequest;
+import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;

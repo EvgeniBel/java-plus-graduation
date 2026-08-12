@@ -51,7 +51,6 @@ public class EventServiceImpl implements EventService {
     public EventFullDto addEvent(Long userId, NewEventDto dto) {
         log.info("Создание события пользователем {}", userId);
 
-        // Проверяем пользователя через Feign
         UserShortDto initiator;
         try {
             initiator = userClient.getUserShort(userId);
@@ -87,7 +86,6 @@ public class EventServiceImpl implements EventService {
         Event addedEvent = eventRepository.save(newEvent);
         log.info("Создано событие с ID: {}", addedEvent.getId());
 
-        // Рейтинг нового события = 0
         return EventMapper.eventToFullDto(addedEvent, initiator, category, 0L, 0.0);
     }
 
@@ -112,10 +110,8 @@ public class EventServiceImpl implements EventService {
             return new ArrayList<>();
         }
 
-        // Получаем дополнительные данные
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
 
-        // ===== НОВОЕ: Получаем рейтинги через gRPC =====
         List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
         Map<Long, Double> ratings = recommendationService.getEventsRatings(eventIds);
 
@@ -152,7 +148,6 @@ public class EventServiceImpl implements EventService {
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
 
-        // ===== НОВОЕ: Получаем рейтинг через gRPC =====
         double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(event);
 
@@ -176,7 +171,6 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
 
-        // ===== НОВОЕ: Получаем рейтинги через gRPC =====
         List<Long> ids = events.stream().map(Event::getId).collect(Collectors.toList());
         Map<Long, Double> ratings = recommendationService.getEventsRatings(ids);
 
@@ -205,19 +199,16 @@ public class EventServiceImpl implements EventService {
         Event oldEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId)));
 
-        // Проверяем, что пользователь является инициатором
         if (!oldEvent.getInitiatorId().equals(userId)) {
             throw new NotFoundException(
                     String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
-        // Проверяем статус
         if (oldEvent.getState().equals(EventState.PUBLISHED)) {
             throw new CreationRulesException("Изменить можно только отмененные события " +
                     "или события в состоянии ожидания модерации.");
         }
 
-        // Обновляем поля
         if (dto.getEventDate() != null) {
             LocalDateTime eventDate = LocalDateTime.parse(dto.getEventDate(), Constants.FORMATTER);
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
@@ -262,7 +253,6 @@ public class EventServiceImpl implements EventService {
             oldEvent.setTitle(dto.getTitle());
         }
 
-        // Обновляем статус
         if (dto.getStateAction() != null) {
             if (dto.getStateAction().equals(UserStateAction.SEND_TO_REVIEW.toString())) {
                 if (oldEvent.getState().equals(EventState.PENDING) ||
@@ -287,7 +277,6 @@ public class EventServiceImpl implements EventService {
         Event patchedEvent = eventRepository.save(oldEvent);
         log.info("Событие {} обновлено, новый статус: {}", eventId, patchedEvent.getState());
 
-        // Получаем данные для ответа
         UserShortDto initiator = getUser(patchedEvent.getInitiatorId());
         Category category = getCategory(patchedEvent.getCategoryId());
         double rating = recommendationService.getEventRating(eventId);
@@ -308,7 +297,6 @@ public class EventServiceImpl implements EventService {
                     String.format("Пользователь с ID: %s не является инициатором события с ID: %s", userId, eventId));
         }
 
-        // Получаем запросы через Feign клиент
         try {
             return requestClient.getRequestsByEvent(eventId);
         } catch (Exception e) {
@@ -457,7 +445,6 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Обновление даты
         if (dto.getEventDate() != null) {
             LocalDateTime eventDate = LocalDateTime.parse(dto.getEventDate(), Constants.FORMATTER);
             if (eventDate.isBefore(LocalDateTime.now().plusHours(1))) {
@@ -467,14 +454,12 @@ public class EventServiceImpl implements EventService {
             oldEvent.setEventDate(eventDate);
         }
 
-        // Обновление категории
         if (dto.getCategory() != null) {
             Category category = categoryRepository.findById(dto.getCategory())
                     .orElseThrow(() -> new NotFoundException(String.format("Категория с ID: %s не найдена.", dto.getCategory())));
             oldEvent.setCategoryId(category.getId());
         }
 
-        // Обновление локации
         if (dto.getLocation() != null) {
             if (oldEvent.getLocation() != null) {
                 oldEvent.getLocation().setLat(dto.getLocation().getLat());
@@ -485,7 +470,6 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Обновление других полей
         if (dto.getAnnotation() != null) {
             oldEvent.setAnnotation(dto.getAnnotation());
         }
@@ -513,75 +497,12 @@ public class EventServiceImpl implements EventService {
         Event patchedEvent = eventRepository.save(oldEvent);
         log.info("Событие {} обновлено администратором, статус: {}", eventId, patchedEvent.getState());
 
-        // Получаем данные для ответа
         UserShortDto initiator = getUser(patchedEvent.getInitiatorId());
         Category category = getCategory(patchedEvent.getCategoryId());
         double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(patchedEvent);
 
         return EventMapper.eventToFullDto(patchedEvent, initiator, category, confirmedRequests, rating);
-    }
-
-    @Override
-    public List<EventShortDto> getEventsByPublicRequest(PublicEventRequestParam param) {
-        log.info("Публичный поиск событий: {}", param);
-
-        if (param.getRangeStart() != null && param.getRangeEnd() != null) {
-            LocalDateTime start = LocalDateTime.parse(param.getRangeStart(), Constants.FORMATTER);
-            LocalDateTime end = LocalDateTime.parse(param.getRangeEnd(), Constants.FORMATTER);
-
-            if (end.isBefore(start)) {
-                throw new ValidationException("rangeEnd должен быть позже rangeStart");
-            }
-
-            if (end.isBefore(LocalDateTime.now())) {
-                throw new ValidationException("rangeEnd должен быть в будущем");
-            }
-        }
-
-        Pageable pageable = PageRequest.of(param.getFrom() / param.getSize(), param.getSize());
-        List<Event> events = eventRepository.findByPublicRequest(param, pageable);
-
-        if (events.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
-
-        // ===== НОВОЕ: Получаем рейтинги через gRPC =====
-        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
-        Map<Long, Double> ratings = recommendationService.getEventsRatings(eventIds);
-
-        Map<Long, Category> categories = getCategories(events);
-        Map<Long, UserShortDto> users = getUsers(events);
-
-        // Фильтрация по availability
-        if (Boolean.TRUE.equals(param.getOnlyAvailable())) {
-            events = events.stream()
-                    .filter(event -> event.getParticipantLimit() == 0 ||
-                            event.getParticipantLimit() > confirmedRequestsCount.getOrDefault(event.getId(), 0L))
-                    .toList();
-        }
-
-        List<EventShortDto> result = new ArrayList<>();
-        for (Event event : events) {
-            Double rating = ratings.getOrDefault(event.getId(), 0.0);
-            Long confirmedRequests = confirmedRequestsCount.getOrDefault(event.getId(), 0L);
-            Category category = categories.get(event.getCategoryId());
-            UserShortDto user = users.get(event.getInitiatorId());
-
-            EventShortDto eventShortDto = EventMapper.eventToShortDto(
-                    event, user, category, confirmedRequests, rating);
-            result.add(eventShortDto);
-        }
-
-        String sort = param.getSort();
-        if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
-            return result.stream()
-                    .sorted(Comparator.comparingDouble(EventShortDto::getRating).reversed())
-                    .toList();
-        }
-        return result;
     }
 
     @Override
@@ -595,7 +516,6 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Можно получить данные только опубликованного события.");
         }
 
-        // ===== НОВОЕ: Отправка просмотра в Collector =====
         if (userId != null) {
             recommendationService.sendViewAction(userId, eventId);
         }
@@ -603,7 +523,6 @@ public class EventServiceImpl implements EventService {
         UserShortDto initiator = getUser(event.getInitiatorId());
         Category category = getCategory(event.getCategoryId());
 
-        // ===== НОВОЕ: Получаем рейтинг через gRPC =====
         double rating = recommendationService.getEventRating(eventId);
         Long confirmedRequests = getConfirmedRequestsCount(event);
 
@@ -671,7 +590,7 @@ public class EventServiceImpl implements EventService {
         recommendationService.sendViewAction(userId, eventId);
     }
 
-    // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+    // ============ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =======
 
 
     //  Метод для получения пользователя с Fallback
@@ -806,5 +725,84 @@ public class EventServiceImpl implements EventService {
             log.warn("Не удалось получить статистику просмотров: {}", e.getMessage());
             return Collections.emptyMap();
         }
+    }
+
+    @Override
+    public boolean hasUserVisitedEvent(Long userId, Long eventId) {
+        log.info("Проверка посещения: userId={}, eventId={}", userId, eventId);
+
+        try {
+            List<ParticipationRequestDto> requests = requestClient.getRequestsByUser(userId);
+
+            return requests.stream()
+                    .anyMatch(r -> r.getEvent().equals(eventId) &&
+                            "CONFIRMED".equals(r.getStatus()));
+        } catch (Exception e) {
+            log.error("Ошибка при проверке посещения: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public List<EventShortDto> getEventsByPublicRequest(PublicEventRequestParam param) {
+        log.info("Публичный поиск событий: {}", param);
+
+        // Валидация дат
+        if (param.getRangeStart() != null && param.getRangeEnd() != null) {
+            LocalDateTime start = LocalDateTime.parse(param.getRangeStart(), Constants.FORMATTER);
+            LocalDateTime end = LocalDateTime.parse(param.getRangeEnd(), Constants.FORMATTER);
+
+            if (end.isBefore(start)) {
+                throw new ValidationException("rangeEnd должен быть позже rangeStart");
+            }
+
+            if (end.isBefore(LocalDateTime.now())) {
+                throw new ValidationException("rangeEnd должен быть в будущем");
+            }
+        }
+
+        Pageable pageable = PageRequest.of(param.getFrom() / param.getSize(), param.getSize());
+        List<Event> events = eventRepository.findByPublicRequest(param, pageable);
+
+        if (events.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Map<Long, Long> confirmedRequestsCount = getConfirmedRequestsCount(events);
+
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Double> ratings = recommendationService.getEventsRatings(eventIds);
+
+        Map<Long, Category> categories = getCategories(events);
+        Map<Long, UserShortDto> users = getUsers(events);
+
+        // Фильтрация по availability
+        if (Boolean.TRUE.equals(param.getOnlyAvailable())) {
+            events = events.stream()
+                    .filter(event -> event.getParticipantLimit() == 0 ||
+                            event.getParticipantLimit() > confirmedRequestsCount.getOrDefault(event.getId(), 0L))
+                    .collect(Collectors.toList());
+        }
+
+        List<EventShortDto> result = new ArrayList<>();
+        for (Event event : events) {
+            Double rating = ratings.getOrDefault(event.getId(), 0.0);
+            Long confirmedRequests = confirmedRequestsCount.getOrDefault(event.getId(), 0L);
+            Category category = categories.get(event.getCategoryId());
+            UserShortDto user = users.get(event.getInitiatorId());
+
+            EventShortDto eventShortDto = EventMapper.eventToShortDto(
+                    event, user, category, confirmedRequests, rating);
+            result.add(eventShortDto);
+        }
+
+        // Сортировка по рейтингу
+        String sort = param.getSort();
+        if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
+            return result.stream()
+                    .sorted(Comparator.comparingDouble(EventShortDto::getRating).reversed())
+                    .collect(Collectors.toList());
+        }
+        return result;
     }
 }

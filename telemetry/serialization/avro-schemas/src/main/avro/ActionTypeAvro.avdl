@@ -1,6 +1,5 @@
 @namespace("ru.practicum.ewm.stats.avro")
 protocol ActionTypeProtocol {
-
     enum ActionTypeAvro {
         VIEW,
         REGISTER,

@@ -1,12 +1,13 @@
 package ru.practicum.grpc;
 
+import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
-import ru.practicum.telemetry.messages.*;
-import ru.practicum.telemetry.services.AnalyzerControllerGrpc;
+import ru.practicum.ewm.stats.proto.*;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
@@ -21,73 +22,88 @@ import java.util.stream.StreamSupport;
 public class AnalyzerGrpcClient {
 
     @GrpcClient("analyzer")
-    private AnalyzerControllerGrpc.AnalyzerControllerBlockingStub analyzerStub;
+    private RecommendationsControllerGrpc.RecommendationsControllerBlockingStub analyzerStub;
 
-
-    public List<RecommendedEvent> getRecommendationsForUser(Long userId, int maxResults) {
+    public List<RecommendedEventProto> getRecommendationsForUser(Long userId, int maxResults) {
         try {
             log.info("Запрос рекомендаций: userId={}, maxResults={}", userId, maxResults);
 
-            UserPredictionsRequest request = UserPredictionsRequest.newBuilder()
+            UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
                     .setUserId(userId)
                     .setMaxResults(maxResults)
                     .build();
 
-            Iterator<RecommendedEvent> iterator = analyzerStub.getRecommendationsForUser(request);
-            List<RecommendedEvent> result = asStream(iterator).collect(Collectors.toList());
+            Iterator<RecommendedEventProto> iterator = analyzerStub.getRecommendationsForUser(request);
+            List<RecommendedEventProto> result = asStream(iterator).collect(Collectors.toList());
 
             log.info("Получено {} рекомендаций", result.size());
             return result;
 
+        } catch (StatusRuntimeException e) {
+            log.error("Ошибка gRPC вызова Analyzer: status={}, message={}",
+                    e.getStatus().getCode(), e.getMessage());
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("Ошибка получения рекомендаций: {}", e.getMessage(), e);
-            return List.of();
+            return new ArrayList<>();
         }
     }
 
-    public List<RecommendedEvent> getSimilarEvents(Long eventId, Long userId, int maxResults) {
+    public List<RecommendedEventProto> getSimilarEvents(Long eventId, Long userId, int maxResults) {
         try {
             log.info("Запрос похожих событий: eventId={}, userId={}", eventId, userId);
 
-            SimilarEventsRequest request = SimilarEventsRequest.newBuilder()
+            SimilarEventsRequestProto request = SimilarEventsRequestProto.newBuilder()
                     .setEventId(eventId)
-                    .setUserId(userId)
+                    .setUserId(userId != null ? userId : 0)
                     .setMaxResults(maxResults)
                     .build();
 
-            Iterator<RecommendedEvent> iterator = analyzerStub.getSimilarEvents(request);
-            List<RecommendedEvent> result = asStream(iterator).collect(Collectors.toList());
+            Iterator<RecommendedEventProto> iterator = analyzerStub.getSimilarEvents(request);
+            List<RecommendedEventProto> result = asStream(iterator).collect(Collectors.toList());
 
             log.info("Получено {} похожих событий", result.size());
             return result;
 
+        } catch (StatusRuntimeException e) {
+            log.error("Ошибка gRPC вызова Analyzer: status={}, message={}",
+                    e.getStatus().getCode(), e.getMessage());
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("Ошибка получения похожих событий: {}", e.getMessage(), e);
-            return List.of();
+            return new ArrayList<>();
         }
     }
 
-    public List<RecommendedEvent> getInteractionsCount(List<Long> eventIds) {
+    public List<RecommendedEventProto> getInteractionsCount(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         try {
             log.info("Запрос взаимодействий для {} событий", eventIds.size());
 
-            InteractionsCountRequest request = InteractionsCountRequest.newBuilder()
+            InteractionsCountRequestProto request = InteractionsCountRequestProto.newBuilder()
                     .addAllEventIds(eventIds)
                     .build();
 
-            Iterator<RecommendedEvent> iterator = analyzerStub.getInteractionsCount(request);
-            List<RecommendedEvent> result = asStream(iterator).collect(Collectors.toList());
+            Iterator<RecommendedEventProto> iterator = analyzerStub.getInteractionsCount(request);
+            List<RecommendedEventProto> result = asStream(iterator).collect(Collectors.toList());
 
             log.info("Получены взаимодействия для {} событий", result.size());
             return result;
 
+        } catch (StatusRuntimeException e) {
+            log.error("Ошибка gRPC вызова Analyzer: status={}, message={}",
+                    e.getStatus().getCode(), e.getMessage());
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("Ошибка получения взаимодействий: {}", e.getMessage(), e);
-            return List.of();
+            return new ArrayList<>();
         }
     }
 
-    private Stream<RecommendedEvent> asStream(Iterator<RecommendedEvent> iterator) {
+    private Stream<RecommendedEventProto> asStream(Iterator<RecommendedEventProto> iterator) {
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED),
                 false

@@ -1,34 +1,39 @@
 package ru.practicum.analyzer.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "event_similarities", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"event_a_id", "event_b_id"})
-})
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "event_similarities", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"event_a", "event_b"})
+})
 public class EventSimilarity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "event_a_id", nullable = false)
-    private Long eventAId;
+    @Column(name = "event_a", nullable = false)
+    private Long eventA;
 
-    @Column(name = "event_b_id", nullable = false)
-    private Long eventBId;
+    @Column(name = "event_b", nullable = false)
+    private Long eventB;
 
-    @Column(name = "similarity_score", nullable = false)
-    private Double similarityScore;
+    @Column(name = "score", nullable = false)
+    private Double score;
 
-    @Column(name = "calculated_at", nullable = false)
-    private LocalDateTime calculatedAt;
+    @Column(name = "timestamp", nullable = false)
+    private Long timestamp;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 }

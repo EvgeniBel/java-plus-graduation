@@ -7,17 +7,24 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.retry.support.RetryTemplate;
 
+
 import java.net.URI;
 import java.util.List;
 
 @Slf4j
-@RequiredArgsConstructor
 public class DiscoveryUriProvider implements UriProvider {
+
     private final DiscoveryClient discoveryClient;
     private final RetryTemplate retryTemplate;
-
-    @Value("${stat.service.id:stats-server}")
     private final String statsServiceId;
+
+    public DiscoveryUriProvider(DiscoveryClient discoveryClient,
+                                RetryTemplate retryTemplate,
+                                @Value("${stat.service.id:stats-server}") String statsServiceId) {
+        this.discoveryClient = discoveryClient;
+        this.retryTemplate = retryTemplate;
+        this.statsServiceId = statsServiceId;
+    }
 
     private ServiceInstance getInstance() {
         try {

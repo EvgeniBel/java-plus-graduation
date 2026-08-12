@@ -24,7 +24,6 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>3.6.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -38,7 +37,7 @@
 
     <build>
         <plugins>
-            <!-- Генерация Avro классов -->
+            <!-- Генерация Avro классов из .avdl файлов -->
             <plugin>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
@@ -47,13 +46,16 @@
                     <execution>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>schema</goal>
-                            <goal>protocol</goal>
-                            <goal>idl-protocol</goal>
+                            <goal>idl-protocol</goal>  <!-- Для .avdl файлов -->
+                            <goal>schema</goal>         <!-- Для .avsc файлов -->
+                            <goal>protocol</goal>       <!-- Для .avpr файлов -->
                         </goals>
                         <configuration>
                             <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
                             <outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>
+                            <stringType>String</stringType>
+                            <createSetters>true</createSetters>
+                            <enableDecimalLogicalType>true</enableDecimalLogicalType>
                         </configuration>
                     </execution>
                 </executions>

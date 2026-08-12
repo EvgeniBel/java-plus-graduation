@@ -1,37 +1,35 @@
 package ru.practicum.analyzer.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import ru.practicum.analyzer.model.UserMaxWeight;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.analyzer.model.UserAction;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserActionRepository extends JpaRepository<UserMaxWeight, Long> {
+public interface UserActionRepository extends JpaRepository<UserAction, Long> {
 
-    // Найти все записи по eventId
-    List<UserMaxWeight> findByEventId(Long eventId);
+    Optional<UserAction> findByUserIdAndEventId(Long userId, Long eventId);
 
-    // Найти все eventId по userId
-    @Query("SELECT DISTINCT u.eventId FROM UserMaxWeight u WHERE u.userId = :userId")
+    @Query("SELECT ua.eventId FROM UserAction ua WHERE ua.userId = :userId")
     List<Long> findEventIdsByUserId(@Param("userId") Long userId);
 
-    // Найти запись по userId и eventId
-    @Query("SELECT u FROM UserMaxWeight u WHERE u.userId = :userId AND u.eventId = :eventId")
-    Optional<UserMaxWeight> findByUserIdAndEventId(@Param("userId") Long userId, @Param("eventId") Long eventId);
+    @Query("SELECT SUM(ua.weight) FROM UserAction ua WHERE ua.eventId IN :eventIds")
+    Long sumWeightsByEventIds(@Param("eventIds") List<Long> eventIds);
 
-    // ПОЛУЧИТЬ ПОСЛЕДНИЕ N ВЗАИМОДЕЙСТВИЙ ПОЛЬЗОВАТЕЛЯ
-    @Query("SELECT u FROM UserMaxWeight u WHERE u.userId = :userId ORDER BY u.updatedAt DESC")
-    List<UserMaxWeight> findRecentByUserId(@Param("userId") Long userId);
-
-    // ПОЛУЧИТЬ ВЕСА ПОЛЬЗОВАТЕЛЯ ДЛЯ СПИСКА СОБЫТИЙ
-    @Query("SELECT u.eventId, u.maxWeight FROM UserMaxWeight u WHERE u.userId = :userId AND u.eventId IN :eventIds")
-    List<Object[]> findUserWeightsForEvents(@Param("userId") Long userId, @Param("eventIds") List<Long> eventIds);
-
-    // ПОЛУЧИТЬ СУММУ ВЕСОВ ДЛЯ СПИСКА СОБЫТИЙ
-    @Query("SELECT u.eventId, SUM(u.maxWeight) FROM UserMaxWeight u WHERE u.eventId IN :eventIds GROUP BY u.eventId")
-    List<Object[]> sumWeightsByEvents(@Param("eventIds") List<Long> eventIds);
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserAction ua SET ua.actionType = :actionType, ua.weight = :weight, " +
+            "ua.timestamp = :timestamp, ua.updatedAt = CURRENT_TIMESTAMP " +
+            "WHERE ua.userId = :userId AND ua.eventId = :eventId")
+    int updateUserAction(@Param("userId") Long userId,
+                         @Param("eventId") Long eventId,
+                         @Param("actionType") ru.practicum.ewm.stats.avro.ActionTypeAvro actionType,
+                         @Param("weight") Integer weight,
+                         @Param("timestamp") Long timestamp);
 }

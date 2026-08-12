@@ -1,18 +1,22 @@
 package ru.practicum.analyzer.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import ru.practicum.telemetry.messages.ActionType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "user_actions")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "user_actions", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "event_id"})
+})
 public class UserAction {
 
     @Id
@@ -27,15 +31,14 @@ public class UserAction {
 
     @Column(name = "action_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private ActionType actionType;
+    private ActionTypeAvro actionType;
 
     @Column(name = "weight", nullable = false)
     private Integer weight;
 
-    @Column(name = "action_time", nullable = false)
-    private LocalDateTime actionTime;
+    @Column(name = "timestamp", nullable = false)
+    private Long timestamp;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 }
-

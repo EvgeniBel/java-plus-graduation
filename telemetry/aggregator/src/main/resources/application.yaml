@@ -2,47 +2,22 @@ spring:
   application:
     name: aggregator
   config:
-    import: "optional:configserver:"
+    import: "configserver:"
   cloud:
     config:
       discovery:
         enabled: true
         service-id: config-server
-      fail-fast: false
+      fail-fast: true
       retry:
         max-attempts: 6
         initial-interval: 1000
         multiplier: 1.1
 
-server:
-  port: 8083
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: aggregator-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: ru.practicum.avro.deserializer.AvroDeserializer
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      max-poll-records: 100
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: ru.practicum.avro.serializer.AvroSerializer
-      acks: all
-      retries: 3
-      enable-idempotence: true
-      batch-size: 16384
-      linger-ms: 10
-
 kafka:
   topics:
-    user-actions: user-actions-topic
-    events-similarity: events-similarity-topic
-
-eureka:
-  client:
-    enabled: false
+    user-actions: stats.user-actions.v1
+    events-similarity: stats.events-similarity.v1
 
 management:
   endpoints:

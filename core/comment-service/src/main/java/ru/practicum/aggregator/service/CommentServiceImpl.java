@@ -6,6 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.aggregator.collector.mapper.CommentMapper;
+import ru.practicum.aggregator.model.Comment;
+import ru.practicum.aggregator.model.CommentStatus;
+import ru.practicum.aggregator.repository.CommentRepository;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.comment.CommentResponseDto;
@@ -17,10 +21,6 @@ import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.CommentException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
-import ru.practicum.aggregator.collector.mapper.CommentMapper;
-import ru.practicum.aggregator.model.Comment;
-import ru.practicum.aggregator.model.CommentStatus;
-import ru.practicum.aggregator.repository.CommentRepository;
 
 import java.time.LocalDateTime;
 
@@ -39,7 +39,6 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponseDto addComment(Long userId, Long eventId, NewCommentDto dto) {
         log.info("Создание комментария пользователем {} к событию {}", userId, eventId);
 
-        // Проверяем пользователя через Feign
         try {
             UserShortDto user = userClient.getUserShort(userId);
             if (user == null) {
@@ -82,25 +81,21 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.findById(dto.getId())
                 .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID: %s не найден.", dto.getId())));
 
-        // Проверяем, что пользователь - автор
         if (!comment.getUserId().equals(dto.getUserId())) {
             throw new ValidationException("Пользователь не является автором комментария.");
         }
 
-        // Проверяем время редактирования (24 часа)
         LocalDateTime now = LocalDateTime.now();
         if (comment.getCreatedAt().isBefore(now.minusHours(24))) {
             throw new ValidationException("Прошло более 24 часов с момента создания. Редактирование невозможно.");
         }
 
-        // Проверяем статус комментария
         if (comment.getStatus() == CommentStatus.REJECTED) {
             throw new ValidationException("Отклоненный комментарий нельзя редактировать.");
         }
 
         comment.setContent(dto.getContent());
         comment.setUpdatedAt(now);
-        // После редактирования снова на модерацию
         if (comment.getStatus() == CommentStatus.APPROVED) {
             comment.setStatus(CommentStatus.PENDING);
         }
@@ -115,14 +110,12 @@ public class CommentServiceImpl implements CommentService {
     public Page<CommentResponseDto> getApprovedCommentsByEvent(Long eventId, Pageable pageable) {
         log.debug("Получение подтвержденных комментариев для event: {}", eventId);
 
-        // Проверяем существование события
         try {
             if (!eventClient.eventExists(eventId)) {
                 throw new NotFoundException(String.format("Событие с ID: %s не найдено.", eventId));
             }
         } catch (Exception e) {
             log.warn("Не удалось проверить существование события {}: {}", eventId, e.getMessage());
-            // Продолжаем, даже если event-service недоступен
         }
 
         Page<Comment> comments = commentRepository.findByEventIdAndStatus(

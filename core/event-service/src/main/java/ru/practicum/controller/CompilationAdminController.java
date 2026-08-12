@@ -42,7 +42,6 @@ public class CompilationAdminController {
         log.info("PATCH /admin/compilations/{} - обновление подборки: events={}, pinned={}, title={}",
                 compId, dto.getEvents(), dto.getPinned(), dto.getTitle());
 
-        // Устанавливаем ID для сервиса
         dto.setId(compId);
         return service.updateCompilation(dto);
     }

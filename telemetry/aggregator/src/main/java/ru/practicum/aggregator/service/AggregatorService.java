@@ -19,18 +19,23 @@ public class AggregatorService {
 
     private final KafkaProducerService kafkaProducerService;
 
+    // Хранилище максимальных весов пользователей для мероприятий
     private final Map<Long, Map<Long, Integer>> userEventWeights = new ConcurrentHashMap<>();
 
+    // Хранилище общих сумм весов для мероприятий
     private final Map<Long, Double> totalWeights = new ConcurrentHashMap<>();
 
+    // Хранилище сумм минимальных весов для пар мероприятий
     private final Map<Long, Map<Long, Double>> minWeightsSums = new ConcurrentHashMap<>();
 
     public synchronized void processUserAction(UserActionEvent action) {
         Long userId = action.getUserId();
         Long eventId = action.getEventId();
         Integer newWeight = ActionTypeUtils.getWeight(action.getActionType());
+        Long timestamp = action.getTimestamp();
 
-        log.info("Обработка действия: userId={}, eventId={}, weight={}", userId, eventId, newWeight);
+        log.info("Обработка действия: userId={}, eventId={}, weight={}, timestamp={}",
+                userId, eventId, newWeight, timestamp);
 
         // 1. Получаем текущий максимальный вес пользователя для этого события
         Map<Long, Integer> eventWeights = userEventWeights.computeIfAbsent(eventId, k -> new ConcurrentHashMap<>());
@@ -52,7 +57,7 @@ public class AggregatorService {
             totalWeights.merge(eventId, (double) newWeight, Double::sum);
 
             // Считаем сходство с новым мероприятием
-            calculateSimilarityForNewEvent(eventId);
+            calculateSimilarityForNewEvent(eventId, timestamp);
         } else {
             // 5. Если вес увеличился → обновляем частные суммы
             double weightDiff = newWeight - oldMaxWeight;
@@ -64,11 +69,11 @@ public class AggregatorService {
             updateMinWeightsSums(eventId, userId, weightDiff);
 
             // Пересчитываем сходство для всех пар с этим событием
-            recalculateSimilarityForEvent(eventId);
+            recalculateSimilarityForEvent(eventId, timestamp);
         }
     }
 
-    private void calculateSimilarityForNewEvent(Long newEventId) {
+    private void calculateSimilarityForNewEvent(Long newEventId, Long timestamp) {
         log.info("Расчёт сходства для нового мероприятия: {}", newEventId);
 
         // Получаем всех пользователей, взаимодействовавших с новым событием
@@ -90,12 +95,12 @@ public class AggregatorService {
             // Рассчитываем сходство
             double similarity = calculateSimilarity(newEventId, otherEventId);
 
-            // Отправляем результат в Kafka
-            sendSimilarity(newEventId, otherEventId, similarity);
+            // Отправляем результат в Kafka с timestamp из действия
+            sendSimilarity(newEventId, otherEventId, similarity, timestamp);
         }
     }
 
-    private void recalculateSimilarityForEvent(Long eventId) {
+    private void recalculateSimilarityForEvent(Long eventId, Long timestamp) {
         log.info("Пересчёт сходства для мероприятия: {}", eventId);
 
         // Для всех пар с этим событием
@@ -111,8 +116,8 @@ public class AggregatorService {
             // Рассчитываем сходство
             double similarity = calculateSimilarity(eventId, otherEventId);
 
-            // Отправляем в Kafka
-            sendSimilarity(eventId, otherEventId, similarity);
+            // Отправляем в Kafka с timestamp из действия
+            sendSimilarity(eventId, otherEventId, similarity, timestamp);
         }
     }
 
@@ -198,7 +203,6 @@ public class AggregatorService {
         log.debug("S_min сохранён: ({}, {}) = {}", first, second, sum);
     }
 
-
     private double getMinWeightSum(Long eventA, Long eventB) {
         long first = Math.min(eventA, eventB);
         long second = Math.max(eventA, eventB);
@@ -209,11 +213,11 @@ public class AggregatorService {
     }
 
     // === ОТПРАВКА В KAFKA ===
-    private void sendSimilarity(Long eventA, Long eventB, double score) {
+    private void sendSimilarity(Long eventA, Long eventB, double score, Long timestamp) {
         long first = Math.min(eventA, eventB);
         long second = Math.max(eventA, eventB);
-        log.info("Сходство: ({}, {}) = {}", first, second, score);
+        log.info("Сходство: ({}, {}) = {}, timestamp={}", first, second, score, timestamp);
 
-        kafkaProducerService.sendSimilarity(first, second, score, System.currentTimeMillis());
+        kafkaProducerService.sendSimilarity(first, second, score, timestamp);
     }
 }

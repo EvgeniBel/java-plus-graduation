@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.aggregator.mapper.RecommendedEventMapper;
 import ru.practicum.dto.event.RecommendedEventDto;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.grpc.AnalyzerGrpcClient;
 import ru.practicum.grpc.CollectorGrpcClient;
-import ru.practicum.telemetry.messages.ActionType;
-import ru.practicum.telemetry.messages.RecommendedEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -23,12 +23,10 @@ public class RecommendationService {
     private final AnalyzerGrpcClient analyzerClient;
     private final RecommendedEventMapper mapper;
 
-    // ===== VIEW =====
-
     public void sendViewAction(Long userId, Long eventId) {
         try {
             log.info("Отправка просмотра: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, ActionType.ACTION_VIEW);
+            boolean success = collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW);
             if (success) {
                 log.info("Просмотр отправлен: userId={}, eventId={}", userId, eventId);
             } else {
@@ -39,12 +37,10 @@ public class RecommendationService {
         }
     }
 
-    // ===== LIKE =====
-
     public void sendLikeAction(Long userId, Long eventId) {
         try {
             log.info("Отправка лайка: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, ActionType.ACTION_LIKE);
+            boolean success = collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
             if (success) {
                 log.info("Лайк отправлен: userId={}, eventId={}", userId, eventId);
             } else {
@@ -55,12 +51,11 @@ public class RecommendationService {
         }
     }
 
-    // ===== REGISTER (для request-service) =====
 
     public void sendRegisterAction(Long userId, Long eventId) {
         try {
             log.info("Отправка регистрации: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, ActionType.ACTION_REGISTER);
+            boolean success = collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
             if (success) {
                 log.info("Регистрация отправлена: userId={}, eventId={}", userId, eventId);
             } else {
@@ -71,11 +66,9 @@ public class RecommendationService {
         }
     }
 
-    // ===== РЕЙТИНГИ =====
-
     public double getEventRating(Long eventId) {
         try {
-            List<RecommendedEvent> result = analyzerClient.getInteractionsCount(List.of(eventId));
+            List<RecommendedEventProto> result = analyzerClient.getInteractionsCount(List.of(eventId));
             if (result != null && !result.isEmpty()) {
                 double rating = result.getFirst().getScore();
                 log.debug("Рейтинг события {}: {}", eventId, rating);
@@ -94,11 +87,11 @@ public class RecommendationService {
         }
 
         try {
-            List<RecommendedEvent> results = analyzerClient.getInteractionsCount(eventIds);
+            List<RecommendedEventProto> results = analyzerClient.getInteractionsCount(eventIds);
             return results.stream()
                     .collect(Collectors.toMap(
-                            RecommendedEvent::getEventId,
-                            RecommendedEvent::getScore
+                            RecommendedEventProto::getEventId,
+                            RecommendedEventProto::getScore
                     ));
         } catch (Exception e) {
             log.warn("Не удалось получить рейтинги для событий: {}", e.getMessage());
@@ -106,13 +99,11 @@ public class RecommendationService {
         }
     }
 
-    // ===== РЕКОМЕНДАЦИИ =====
-
     public List<RecommendedEventDto> getRecommendationsForUser(Long userId, int maxResults) {
         try {
             log.info("Запрос рекомендаций: userId={}, maxResults={}", userId, maxResults);
-            List<RecommendedEvent> events = analyzerClient.getRecommendationsForUser(userId, maxResults);
-            return mapper.toDtoList(events);  // ← Преобразование в DTO
+            List<RecommendedEventProto> events = analyzerClient.getRecommendationsForUser(userId, maxResults);
+            return mapper.toDtoList(events);
         } catch (Exception e) {
             log.error("Ошибка получения рекомендаций: {}", e.getMessage(), e);
             return List.of();
@@ -122,7 +113,7 @@ public class RecommendationService {
     public List<RecommendedEventDto> getSimilarEvents(Long eventId, Long userId, int maxResults) {
         try {
             log.info("Запрос похожих событий: eventId={}, userId={}", eventId, userId);
-            List<RecommendedEvent> events = analyzerClient.getSimilarEvents(eventId, userId, maxResults);
+            List<RecommendedEventProto> events = analyzerClient.getSimilarEvents(eventId, userId, maxResults);
             return mapper.toDtoList(events);
         } catch (Exception e) {
             log.error("Ошибка получения похожих событий: {}", e.getMessage(), e);

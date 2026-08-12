@@ -13,12 +13,6 @@
     <artifactId>proto-schemas</artifactId>
     <packaging>jar</packaging>
 
-    <properties>
-        <protobuf.version>3.23.4</protobuf.version>
-        <grpc.version>1.63.0</grpc.version>
-        <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -48,16 +42,14 @@
 
     <build>
         <extensions>
-            <!-- Определяет os.detected.classifier для protoc -->
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>${os-maven-plugin.version}</version>
+                <version>1.7.1</version>
             </extension>
         </extensions>
 
         <plugins>
-            <!-- Генерация Java классов из proto -->
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
@@ -66,7 +58,7 @@
                     <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
-                    <protoSourceRoot>${project.basedir}/src/main/protobuf</protoSourceRoot>
+                    <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>  <!-- ИСПРАВЛЕНО: proto вместо protobuf -->
                     <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
                     <clearOutputDirectory>false</clearOutputDirectory>
                 </configuration>
@@ -80,7 +72,6 @@
                 </executions>
             </plugin>
 
-            <!-- Добавляем сгенерированные источники в classpath -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>

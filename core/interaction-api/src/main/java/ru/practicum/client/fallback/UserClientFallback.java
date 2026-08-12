@@ -48,7 +48,7 @@ public class UserClientFallback implements UserClient {
     @Override
     public boolean userExists(Long userId) {
         log.warn("UserService недоступен при проверке пользователя ID: {}, возвращаем true", userId);
-        return true; // ⚠️ Возвращаем true, чтобы не блокировать выполнение
+        return true; // Возвращаем true, чтобы не блокировать выполнение
     }
 
     @Override

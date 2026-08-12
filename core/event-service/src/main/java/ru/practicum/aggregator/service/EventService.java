@@ -29,7 +29,7 @@ public interface EventService {
 
     List<EventShortDto> getEventsByPublicRequest(PublicEventRequestParam param);
 
-    EventFullDto getEventByIdByPublicRequest(Long eventId, Long userId);  // ← Исправлено
+    EventFullDto getEventByIdByPublicRequest(Long eventId, Long userId);
 
     boolean eventExists(Long eventId);
 
@@ -46,4 +46,6 @@ public interface EventService {
     Map<Long, Double> getEventsRatings(List<Long> eventIds);
 
     void sendViewAction(Long userId, Long eventId);
+
+    boolean hasUserVisitedEvent(Long userId, Long eventId);
 }

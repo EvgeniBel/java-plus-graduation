@@ -1,15 +1,15 @@
 package ru.practicum.aggregator.collector.mapper;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.aggregator.model.Category;
+import ru.practicum.aggregator.model.Event;
+import ru.practicum.aggregator.model.EventState;
+import ru.practicum.aggregator.model.Location;
 import ru.practicum.constants.Constants;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.user.UserShortDto;
-import ru.practicum.aggregator.model.Category;
-import ru.practicum.aggregator.model.Event;
-import ru.practicum.aggregator.model.EventState;
-import ru.practicum.aggregator.model.Location;
 
 import java.time.LocalDateTime;
 
@@ -66,7 +66,7 @@ public class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState().toString())
                 .title(event.getTitle())
-                .rating(rating != null ? rating : 0.0)  // ← rating вместо views
+                .rating(rating != null ? rating : 0.0)
                 .build();
     }
 
@@ -75,7 +75,7 @@ public class EventMapper {
             UserShortDto initiator,
             Category category,
             Long confirmedRequests,
-            Double rating  // ← rating вместо views
+            Double rating
     ) {
         return EventShortDto.builder()
                 .annotation(event.getAnnotation())

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.telemetry.messages.ActionType;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
 @Data
 @Builder
@@ -13,6 +13,6 @@ import ru.practicum.telemetry.messages.ActionType;
 public class UserActionEvent {
     private Long userId;
     private Long eventId;
-    private ActionType actionType;
+    private ActionTypeAvro actionType;
     private Long timestamp;
 }

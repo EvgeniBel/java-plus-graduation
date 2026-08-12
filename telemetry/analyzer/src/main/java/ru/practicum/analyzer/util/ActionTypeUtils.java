@@ -1,4 +1,4 @@
-package ru.practicum.aggregator.util;
+package ru.practicum.analyzer.util;
 
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 

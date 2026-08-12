@@ -50,7 +50,6 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation saved = compilationRepository.save(compilation);
         log.info("Подборка создана с id: {}", saved.getId());
 
-        // Получаем события для ответа
         List<EventShortDto> events = eventService.getShortEventsInfoByIds(
                 CompilationMapper.getEventIds(saved)
         );
@@ -66,10 +65,8 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation compilation = compilationRepository.findById(dto.getId())
                 .orElseThrow(() -> new NotFoundException(String.format("Подборка с id=%s не найдена", dto.getId())));
 
-        // Обновляем основные поля
         CompilationMapper.updateEntity(compilation, dto);
 
-        // Обновляем список событий
         if (dto.getEvents() != null) {
             List<Event> events = eventRepository.findAllById(dto.getEvents());
             compilation.setEvents(events);
@@ -105,7 +102,6 @@ public class CompilationServiceImpl implements CompilationService {
         int page = dto.getFrom() / dto.getSize();
         Pageable pageable = PageRequest.of(page, dto.getSize());
 
-        // Получаем подборки с пагинацией
         Page<Compilation> compilationsPage;
         if (dto.getPinned() != null) {
             compilationsPage = compilationRepository.findAllByPinned(dto.getPinned(), pageable);
@@ -119,7 +115,6 @@ public class CompilationServiceImpl implements CompilationService {
             return new ArrayList<>();
         }
 
-        // Собираем все ID событий из всех подборок
         List<Long> allEventIds = compilations.stream()
                 .flatMap(c -> CompilationMapper.getEventIds(c).stream())
                 .distinct()
@@ -130,7 +125,6 @@ public class CompilationServiceImpl implements CompilationService {
         Map<Long, EventShortDto> eventMap = allEvents.stream()
                 .collect(Collectors.toMap(EventShortDto::getId, e -> e));
 
-        // Формируем результат
         return compilations.stream()
                 .map(comp -> {
                     List<Long> eventIds = CompilationMapper.getEventIds(comp);

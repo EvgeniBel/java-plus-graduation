@@ -34,7 +34,6 @@ public class EventPrivateController {
     ) {
         log.info("Создание события пользователем с ID: {}", userId);
 
-        // Устанавливаем значения по умолчанию
         if (dto.getPaid() == null) {
             dto.setPaid(false);
         }

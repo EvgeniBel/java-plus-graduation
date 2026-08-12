@@ -1,28 +1,32 @@
--- Создание таблицы user_max_weights
-CREATE TABLE IF NOT EXISTS user_max_weights (
+-- Таблица для хранения действий пользователей
+CREATE TABLE IF NOT EXISTS user_actions (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     event_id BIGINT NOT NULL,
-    max_weight INTEGER NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT uk_user_event UNIQUE (user_id, event_id)
+    action_type VARCHAR(20) NOT NULL,
+    weight INTEGER NOT NULL,
+    timestamp BIGINT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, event_id)
 );
 
--- Создание таблицы event_similarities
+-- Индексы для оптимизации запросов
+CREATE INDEX IF NOT EXISTS idx_user_actions_user_id ON user_actions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_actions_event_id ON user_actions(event_id);
+CREATE INDEX IF NOT EXISTS idx_user_actions_user_event ON user_actions(user_id, event_id);
+
+-- Таблица для хранения сходства мероприятий
 CREATE TABLE IF NOT EXISTS event_similarities (
     id BIGSERIAL PRIMARY KEY,
-    event_a_id BIGINT NOT NULL,
-    event_b_id BIGINT NOT NULL,
-    similarity_score DOUBLE PRECISION NOT NULL,
-    calculated_at TIMESTAMP NOT NULL,
-    CONSTRAINT uk_event_pair UNIQUE (event_a_id, event_b_id)
+    event_a BIGINT NOT NULL,
+    event_b BIGINT NOT NULL,
+    score DOUBLE PRECISION NOT NULL,
+    timestamp BIGINT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(event_a, event_b)
 );
 
--- Индексы для производительности
-CREATE INDEX IF NOT EXISTS idx_user_max_weights_user_id ON user_max_weights(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_max_weights_event_id ON user_max_weights(event_id);
-CREATE INDEX IF NOT EXISTS idx_user_max_weights_updated_at ON user_max_weights(updated_at);
-
-CREATE INDEX IF NOT EXISTS idx_event_similarities_event_a_id ON event_similarities(event_a_id);
-CREATE INDEX IF NOT EXISTS idx_event_similarities_event_b_id ON event_similarities(event_b_id);
-CREATE INDEX IF NOT EXISTS idx_event_similarities_score ON event_similarities(similarity_score DESC);
+-- Индексы для оптимизации запросов
+CREATE INDEX IF NOT EXISTS idx_event_similarities_event_a ON event_similarities(event_a);
+CREATE INDEX IF NOT EXISTS idx_event_similarities_event_b ON event_similarities(event_b);
+CREATE INDEX IF NOT EXISTS idx_event_similarities_score ON event_similarities(score DESC);

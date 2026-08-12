@@ -1,12 +1,13 @@
-server:
-  port: 8090
-
 spring:
   application:
     name: analyzer
   cloud:
     config:
       enabled: true
+      fail-fast: true
+      retry:
+        max-attempts: 3
+        max-interval: 6000
 
   datasource:
     url: jdbc:postgresql://localhost:5439/analyzer_db
@@ -28,41 +29,58 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
 
+  # ===== ВЕРНУЛИ spring.kafka =====
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: analyzer-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: ru.practicum.avro.deserializer.AvroDeserializer
-      properties:
-        value.deserializer.class: ru.practicum.ewm.stats.avro.UserActionAvro
       auto-offset-reset: earliest
       enable-auto-commit: false
       max-poll-records: 100
 
+# ===== HTTP порт (случайный) =====
+server:
+  port: 0
 
+# ===== gRPC порт (случайный) =====
 grpc:
   server:
-    port: 9091
+    port: 0
 
+# ===== Kafka топики =====
 kafka:
   topics:
-    user-actions: user-actions-topic
-    events-similarity: events-similarity-topic
+    user-actions: stats.user-actions.v1
+    events-similarity: stats.events-similarity.v1
 
+# ===== EUREKA =====
 eureka:
   client:
     enabled: true
     register-with-eureka: true
     fetch-registry: true
-    service-url:
+    serviceUrl:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
     instance-id: "${spring.application.name}:${random.value}"
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
     ru.practicum.analyzer: DEBUG
     org.springframework.kafka: INFO
+    org.springframework.jdbc: DEBUG
     com.netflix.discovery: DEBUG

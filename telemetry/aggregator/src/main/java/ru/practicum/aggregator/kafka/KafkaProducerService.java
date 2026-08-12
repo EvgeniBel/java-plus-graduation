@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
+
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -31,17 +34,24 @@ public class KafkaProducerService {
 
             String key = first + "-" + second;
 
-            kafkaTemplate.send(similarityTopic, key, similarity)
-                    .whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            log.debug("Сходство отправлено: ({}, {}) = {}", first, second, score);
-                        } else {
-                            log.error("Ошибка отправки сходства: {}", ex.getMessage(), ex);
-                        }
-                    });
+            log.info("Отправка сходства в Kafka: topic={}, eventA={}, eventB={}, score={}",
+                    similarityTopic, first, second, score);
+
+            CompletableFuture<SendResult<String, EventSimilarityAvro>> future =
+                    kafkaTemplate.send(similarityTopic, key, similarity);
+
+            future.whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.debug("Сходство отправлено: eventA={}, eventB={}, offset={}",
+                            first, second, result.getRecordMetadata().offset());
+                } else {
+                    log.error("Ошибка отправки сходства: {}", ex.getMessage(), ex);
+                }
+            });
 
         } catch (Exception e) {
             log.error("Критическая ошибка при отправке сходства: {}", e.getMessage(), e);
+            throw new RuntimeException("Ошибка отправки в Kafka", e);
         }
     }
 }

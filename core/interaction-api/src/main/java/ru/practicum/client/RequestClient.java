@@ -49,4 +49,6 @@ public interface RequestClient {
             @PathVariable(REQUEST_BY_ID_PARAM) Long requestId,
             @RequestParam("status") String status
     );
+    @GetMapping(REQUESTS_BASE)
+    List<ParticipationRequestDto> getRequestsByUser(@PathVariable(USER_BY_ID_PARAM) Long userId);
 }

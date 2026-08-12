@@ -42,7 +42,6 @@ public class CommentMapper {
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt());
 
-        // Получаем имя пользователя через Feign
         try {
             UserShortDto user = userClient.getUserShort(comment.getUserId());
             builder.authorName(user != null ? user.getName() : "Unknown user");
@@ -55,7 +54,6 @@ public class CommentMapper {
         return builder.build();
     }
 
-    //Для публичных методов - без запроса к другим сервисам (быстрее)
     public CommentResponseDto toSimpleResponseDto(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())

@@ -1,8 +1,15 @@
 package ru.practicum.grpc;
 
+import net.devh.boot.grpc.client.interceptor.GlobalClientInterceptorConfigurer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class GrpcClientConfig {
-    // Конфигурация через application.yml
+
+    @Bean
+    public GlobalClientInterceptorConfigurer globalClientInterceptorConfigurer() {
+        return registry -> {
+        };
+    }
 }
