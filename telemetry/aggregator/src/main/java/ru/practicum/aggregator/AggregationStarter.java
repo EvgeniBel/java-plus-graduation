@@ -2,49 +2,47 @@ package ru.practicum.aggregator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.errors.WakeupException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import ru.practicum.aggregator.kafka.ClientConfiguration;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AggregationStarter {
-    private final ClientConfiguration client;
-    private final Map<Integer, Map<Integer, Double>> eventUserActionMatrix = new HashMap<>();
-    private final Map<Integer, Double> eventSumValue = new HashMap<>();
-    private final Map<Integer, Map<Integer, Double>> minWeightsSums = new HashMap<>();
+
+    // 🔥 Используем KafkaTemplate вместо ClientConfiguration
+    private final KafkaTemplate<String, EventSimilarityAvro> kafkaTemplate;
+
+    @Value("${app.topics.events-similarity:stats.events-similarity.v1}")
+    private String similarityTopic;
+
+    private final Map<Integer, Map<Integer, Double>> eventUserActionMatrix = new ConcurrentHashMap<>();
+    private final Map<Integer, Double> eventSumValue = new ConcurrentHashMap<>();
+    private final Map<Integer, Map<Integer, Double>> minWeightsSums = new ConcurrentHashMap<>();
+
     private static final double EPSILON = 1e-9;
 
-    public void start() {
+    @KafkaListener(
+            topics = "${app.topics.user-actions:stats.user-actions.v1}",
+            concurrency = "5",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void listen(UserActionAvro data, Acknowledgment ack) {
         try {
-            client.getConsumer().subscribe(List.of("stats.user-actions.v1"));
-
-            while (true) {
-                ConsumerRecords<String, UserActionAvro> records =
-                        client.getConsumer().poll(Duration.ofSeconds(1));
-
-                for (ConsumerRecord<String, UserActionAvro> record : records) {
-                    processUserAction(record.value());
-                }
-            }
-        } catch (WakeupException ignored) {
+            processUserAction(data);
+            ack.acknowledge();
         } catch (Exception e) {
-            log.error("Ошибка во время обработки событий от датчиков", e);
-        } finally {
-            closeResources();
+            log.error("Ошибка обработки сообщения: {}", e.getMessage(), e);
         }
     }
 
@@ -75,7 +73,7 @@ public class AggregationStarter {
 
     private void updateUserWeight(int eventId, int userId, double newWeight) {
         eventUserActionMatrix
-                .computeIfAbsent(eventId, k -> new HashMap<>())
+                .computeIfAbsent(eventId, k -> new ConcurrentHashMap<>())
                 .put(userId, newWeight);
         log.info("Обновлена матрица действий пользователя для события {}: пользователь {} -> вес {}",
                 eventId, userId, newWeight);
@@ -113,7 +111,7 @@ public class AggregationStarter {
             double updatedMinSum = currentMinSum + (newMin - oldMin);
 
             minWeightsSums
-                    .computeIfAbsent(firstKey, k -> new HashMap<>())
+                    .computeIfAbsent(firstKey, k -> new ConcurrentHashMap<>())
                     .put(secondKey, updatedMinSum);
 
             log.info("Обновлена S_min для пары ({}, {}): {} -> {}",
@@ -140,10 +138,10 @@ public class AggregationStarter {
                 .setEventA(firstKey)
                 .setEventB(secondKey)
                 .setScore(similarity)
-                .setTimestamp(Instant.now().toEpochMilli())  // ← Текущее время
+                .setTimestamp(Instant.now().toEpochMilli())
                 .build();
 
-        client.getProducer().send(new ProducerRecord<>("stats.events-similarity.v1", avro));
+        kafkaTemplate.send(similarityTopic, avro);
         log.info("Отправлено сходство для пары ({}, {}): {}", firstKey, secondKey, similarity);
     }
 
@@ -153,15 +151,5 @@ public class AggregationStarter {
             case REGISTER -> 0.8;
             case LIKE -> 1.0;
         };
-    }
-
-    private void closeResources() {
-        try {
-            client.getProducer().flush();
-            client.getConsumer().commitSync();
-        } finally {
-            log.info("Закрываем консьюмер и продюсер");
-            client.stop();
-        }
     }
 }
