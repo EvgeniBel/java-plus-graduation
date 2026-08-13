@@ -17,6 +17,7 @@
     <name>Stats Service</name>
     <description>Statistics service for Explore With Me</description>
 
+
     <dependencies>
         <!-- Внутренние зависимости -->
         <dependency>

@@ -13,6 +13,7 @@ import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,6 @@ public class AggregationStarter {
 
         int eventId = (int) data.getEventId();
         int userId = (int) data.getUserId();
-        long actionTimestamp = data.getTimestamp(); // ✅ Извлекаем timestamp действия
 
         double oldWeight = getUserWeight(eventId, userId);
         double newWeight = computeWeightActionType(data.getActionType());
@@ -65,7 +65,7 @@ public class AggregationStarter {
 
         updateUserWeight(eventId, userId, newWeight);
         updateEventSum(eventId, oldWeight, newWeight);
-        recalculateSimilarities(eventId, userId, oldWeight, newWeight, actionTimestamp); // ✅ Передаем timestamp
+        recalculateSimilarities(eventId, userId, oldWeight, newWeight);
     }
 
     private double getUserWeight(int eventId, int userId) {
@@ -90,8 +90,7 @@ public class AggregationStarter {
                 eventId, currentEventSum, newEventSum);
     }
 
-    private void recalculateSimilarities(int eventId, int userId, double oldWeight,
-                                         double newWeight, long actionTimestamp) {
+    private void recalculateSimilarities(int eventId, int userId, double oldWeight, double newWeight) {
         for (int otherEventId : eventSumValue.keySet()) {
             if (otherEventId == eventId) continue;
 
@@ -108,10 +107,7 @@ public class AggregationStarter {
             double newMin = Math.min(newWeight, otherUserWeight);
             double oldMin = Math.min(oldWeight, otherUserWeight);
 
-            // Проверяем, изменилось ли значение
-            if (Math.abs(newMin - oldMin) < EPSILON) {
-                continue; // Значение не изменилось - пропускаем
-            }
+            if (Math.abs(newMin - oldMin) < EPSILON) continue;
 
             double currentMinSum = getMinSum(firstKey, secondKey);
             double updatedMinSum = currentMinSum + (newMin - oldMin);
@@ -123,8 +119,7 @@ public class AggregationStarter {
             log.info("Обновлена S_min для пары ({}, {}): {} -> {}",
                     firstKey, secondKey, currentMinSum, updatedMinSum);
 
-            sendSimilarityEvent(firstKey, secondKey, updatedMinSum,
-                    sumFirst, sumSecond, actionTimestamp);
+            sendSimilarityEvent(firstKey, secondKey, updatedMinSum, sumFirst, sumSecond);
         }
     }
 
@@ -138,14 +133,14 @@ public class AggregationStarter {
     }
 
     private void sendSimilarityEvent(long firstKey, long secondKey, double minSum,
-                                     double sumFirst, double sumSecond, long actionTimestamp) {
+                                     double sumFirst, double sumSecond) {
         double similarity = minSum / (Math.sqrt(sumFirst) * Math.sqrt(sumSecond));
 
         EventSimilarityAvro avro = EventSimilarityAvro.newBuilder()
                 .setEventA(firstKey)
                 .setEventB(secondKey)
                 .setScore(similarity)
-                .setTimestamp(actionTimestamp) // ✅ Используем timestamp действия
+                .setTimestamp(Instant.now().toEpochMilli())  // ← Текущее время
                 .build();
 
         client.getProducer().send(new ProducerRecord<>("stats.events-similarity.v1", avro));
