@@ -29,15 +29,18 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
 
-  # ===== ВЕРНУЛИ spring.kafka =====
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: analyzer-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: ru.practicum.analyzer.deserialize.UserActionDeserializer  # ✅ Исправлено
       auto-offset-reset: earliest
       enable-auto-commit: false
       max-poll-records: 100
+      properties:
+        # Дополнительные настройки для Avro
+        specific.avro.reader: true
 
 # ===== HTTP порт (случайный) =====
 server:

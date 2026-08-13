@@ -1,4 +1,4 @@
-package ru.practicum.collector.error;
+package ru.practicum.analyzer;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -8,21 +8,21 @@ import net.devh.boot.grpc.server.advice.GrpcExceptionHandler;
 
 @Slf4j
 @GrpcAdvice
-public class ErrorHandler {
+public class GlobalExceptionHandler {
 
     @GrpcExceptionHandler(IllegalArgumentException.class)
-    public StatusRuntimeException handleIllegalArgument(IllegalArgumentException e) {
-        log.error("Ошибка валидации: {}", e.getMessage());
+    public StatusRuntimeException handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("Invalid argument: {}", e.getMessage());
         return Status.INVALID_ARGUMENT
                 .withDescription(e.getMessage())
                 .asRuntimeException();
     }
 
-    @GrpcExceptionHandler(Exception.class)
-    public StatusRuntimeException handleException(Exception e) {
-        log.error("Внутренняя ошибка: {}", e.getMessage(), e);
+    @GrpcExceptionHandler(Throwable.class)
+    public StatusRuntimeException handleGenericException(Throwable e) {
+        log.error("Internal error: {}", e.getMessage(), e);
         return Status.INTERNAL
-                .withDescription("Внутренняя ошибка сервера")
+                .withDescription("Internal server error: " + e.getMessage())
                 .asRuntimeException();
     }
 }

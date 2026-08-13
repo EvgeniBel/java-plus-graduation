@@ -1,43 +1,29 @@
 package ru.practicum.analyzer.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 
-@Data
-@Builder
+@Entity
+@Table(name = "similarities")
+
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "event_similarities",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"event_a", "event_b"}),
-        indexes = {
-                @Index(name = "idx_event_similarities_event_a", columnList = "event_a"),
-                @Index(name = "idx_event_similarities_event_b", columnList = "event_b"),
-                @Index(name = "idx_event_similarities_score", columnList = "score DESC")
-        })
+@Builder
 public class EventSimilarity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "event_a", nullable = false)
-    private Long eventA;
-
-    @Column(name = "event_b", nullable = false)
-    private Long eventB;
-
-    @Column(name = "score", nullable = false)
-    private Double score;
-
+    @Column(name = "event1", nullable = false)
+    private Long event1;
+    @Column(name = "event2", nullable = false)
+    private Long event2;
+    @Column(name = "similarity", nullable = false)
+    private Double similarity;
     @Column(name = "timestamp", nullable = false)
-    private Long timestamp;
-
-    @Column(name = "updated_at")
-    private Instant updatedAt;
+    private Instant timestamp;
 }

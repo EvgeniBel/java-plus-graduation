@@ -13,6 +13,11 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-stats-server" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-event:
     image: postgres:15
@@ -28,6 +33,11 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-event-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-comment:
     image: postgres:15
@@ -43,6 +53,11 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-comment-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-request:
     image: postgres:15
@@ -58,6 +73,11 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-request-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-user:
     image: postgres:15
@@ -73,6 +93,11 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-user-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-analyzer:
     image: postgres:15
@@ -89,6 +114,11 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U analyzer_user -d analyzer_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -101,17 +131,25 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # ===== ТОЛЬКО localhost =====
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      # ============================
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -122,21 +160,13 @@ services:
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
-    depends_on:
-      - kafka
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: localhost:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    ports:
-      - "8085:8080"
-    restart: unless-stopped
-    networks:
-      - ewm-network
 
 volumes:
   postgres-stats-data:

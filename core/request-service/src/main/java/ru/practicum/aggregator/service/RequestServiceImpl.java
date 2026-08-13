@@ -11,7 +11,7 @@ import ru.practicum.dto.request.CreateUpdateRequestDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.dto.user.UserShortDto;
-import ru.practicum.ewm.stats.proto.ActionTypeProto;
+
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
@@ -19,6 +19,7 @@ import ru.practicum.aggregator.collector.mapper.RequestMapper;
 import ru.practicum.aggregator.model.ParticipationRequest;
 import ru.practicum.aggregator.repository.RequestRepository;
 import ru.practicum.grpc.CollectorGrpcClient;
+import ru.practicum.stats.service.collector.UserActionOuterClass;
 
 
 import java.time.LocalDateTime;
@@ -128,12 +129,8 @@ public class RequestServiceImpl implements RequestService {
     private void sendRegistrationToCollector(Long userId, Long eventId) {
         try {
             log.info("Отправка регистрации в Collector: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
-            if (success) {
-                log.info("Регистрация отправлена: userId={}, eventId={}", userId, eventId);
-            } else {
-                log.warn("Не удалось отправить регистрацию: userId={}, eventId={}", userId, eventId);
-            }
+            collectorClient.collectUserAction(userId, eventId, UserActionOuterClass.ActionTypeProto.ACTION_REGISTER);
+            log.info("Регистрация отправлена: userId={}, eventId={}", userId, eventId);
         } catch (Exception e) {
             log.error("Ошибка отправки регистрации: userId={}, eventId={}", userId, eventId, e);
         }

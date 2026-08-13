@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package stats.service.collector;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option java_package = "ru.practicum.stats.service.collector";
+option java_outer_classname = "UserActionOuterClass";
+
+// Перечисление типов действий
+enum ActionTypeProto {
+  ACTION_VIEW = 0;      // Просмотр страницы мероприятия
+  ACTION_REGISTER = 1;  // Заявка на участие в мероприятии
+  ACTION_LIKE = 2;      // Положительная оценка/лайк мероприятию
+}
+
+// Сообщение о действии пользователя
+message UserActionProto {
+  int64 user_id = 1;                          // Идентификатор пользователя
+  int64 event_id = 2;                         // Идентификатор мероприятия
+  ActionTypeProto action_type = 3;            // Тип действия
+  google.protobuf.Timestamp timestamp = 4;    // Временная метка
+}
+
+// Сервис для сбора действий пользователей
+service UserActionController {
+  rpc CollectUserAction(UserActionProto) returns (google.protobuf.Empty);
+}

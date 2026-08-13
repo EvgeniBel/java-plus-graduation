@@ -1,15 +1,13 @@
 package ru.practicum.grpc;
 
+
 import com.google.protobuf.Timestamp;
-import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.Empty;
-import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
-import ru.practicum.ewm.stats.proto.UserActionProto;
+import ru.practicum.stats.service.collector.UserActionControllerGrpc;
+import ru.practicum.stats.service.collector.UserActionOuterClass;
 
 import java.time.Instant;
 
@@ -19,52 +17,29 @@ import java.time.Instant;
 public class CollectorGrpcClient {
 
     @GrpcClient("collector")
-    private UserActionControllerGrpc.UserActionControllerBlockingStub collectorStub;
+    private UserActionControllerGrpc.UserActionControllerBlockingStub stub;
 
-    public boolean sendUserAction(Long userId, Long eventId, ActionTypeProto actionType, Timestamp timestamp) {
+    public void collectUserAction(Long userId, Long eventId, UserActionOuterClass.ActionTypeProto actionType) {
         try {
-            UserActionProto request = UserActionProto.newBuilder()
+            UserActionOuterClass.UserActionProto action = UserActionOuterClass.UserActionProto.newBuilder()
                     .setUserId(userId)
                     .setEventId(eventId)
                     .setActionType(actionType)
-                    .setTimestamp(timestamp)
+                    .setTimestamp(Timestamp.newBuilder()
+                            .setSeconds(System.currentTimeMillis() / 1000)
+                            .setNanos((int) ((System.currentTimeMillis() % 1000) * 1_000_000))
+                            .build())
                     .build();
 
-            log.info("Отправка действия в Collector: userId={}, eventId={}, actionType={}",
+            stub.collectUserAction(action);
+            log.debug("Отправлено действие в Collector: userId={}, eventId={}, actionType={}",
                     userId, eventId, actionType);
 
-            Empty response = collectorStub.collectUserAction(request);
-
-            log.info("Действие успешно отправлено");
-            return true;
-
-        } catch (StatusRuntimeException e) {
-            log.error("Ошибка gRPC вызова Collector: status={}, message={}",
-                    e.getStatus().getCode(), e.getMessage());
-            return false;
         } catch (Exception e) {
-            log.error("Ошибка вызова Collector: {}", e.getMessage(), e);
-            return false;
+            log.error("Ошибка отправки действия в Collector: userId={}, eventId={}, actionType={}",
+                    userId, eventId, actionType, e);
+            throw new RuntimeException("Ошибка отправки действия в Collector", e);
         }
     }
 
-    public boolean sendUserAction(Long userId, Long eventId, ActionTypeProto actionType) {
-        Timestamp timestamp = Timestamp.newBuilder()
-                .setSeconds(Instant.now().getEpochSecond())
-                .setNanos(Instant.now().getNano())
-                .build();
-        return sendUserAction(userId, eventId, actionType, timestamp);
-    }
-
-    public boolean sendViewAction(Long userId, Long eventId) {
-        return sendUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW);
-    }
-
-    public boolean sendLikeAction(Long userId, Long eventId) {
-        return sendUserAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
-    }
-
-    public boolean sendRegisterAction(Long userId, Long eventId) {
-        return sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
-    }
 }
