@@ -11,7 +11,6 @@ import ru.practicum.dto.request.CreateUpdateRequestDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.dto.user.UserShortDto;
-import ru.practicum.ewm.stats.proto.ActionTypeProto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
@@ -19,7 +18,7 @@ import ru.practicum.aggregator.collector.mapper.RequestMapper;
 import ru.practicum.aggregator.model.ParticipationRequest;
 import ru.practicum.aggregator.repository.RequestRepository;
 import ru.practicum.grpc.CollectorGrpcClient;
-
+import ru.practicum.stats.service.collector.UserActionOuterClass.ActionTypeProto;
 
 import java.time.LocalDateTime;
 import java.util.List;
