@@ -1,15 +1,15 @@
 package ru.practicum.grpc;
 
+import com.google.protobuf.Empty;
 import com.google.protobuf.Timestamp;
 import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.Empty;
-import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
-import ru.practicum.ewm.stats.proto.UserActionProto;
+import ru.practicum.stats.service.collector.UserActionControllerGrpc;
+import ru.practicum.stats.service.collector.UserActionOuterClass.ActionTypeProto;
+import ru.practicum.stats.service.collector.UserActionOuterClass.UserActionProto;
 
 import java.time.Instant;
 
@@ -23,11 +23,24 @@ public class CollectorGrpcClient {
 
     public boolean sendUserAction(Long userId, Long eventId, ActionTypeProto actionType, Timestamp timestamp) {
         try {
+            if (userId == null || userId <= 0) {
+                log.warn("Невалидный userId: {}", userId);
+                return false;
+            }
+            if (eventId == null || eventId <= 0) {
+                log.warn("Невалидный eventId: {}", eventId);
+                return false;
+            }
+            if (actionType == null) {
+                log.warn("actionType не может быть null");
+                return false;
+            }
+
             UserActionProto request = UserActionProto.newBuilder()
                     .setUserId(userId)
                     .setEventId(eventId)
                     .setActionType(actionType)
-                    .setTimestamp(timestamp)
+                    .setTimestamp(timestamp != null ? timestamp : createTimestamp())
                     .build();
 
             log.info("Отправка действия в Collector: userId={}, eventId={}, actionType={}",
@@ -49,11 +62,7 @@ public class CollectorGrpcClient {
     }
 
     public boolean sendUserAction(Long userId, Long eventId, ActionTypeProto actionType) {
-        Timestamp timestamp = Timestamp.newBuilder()
-                .setSeconds(Instant.now().getEpochSecond())
-                .setNanos(Instant.now().getNano())
-                .build();
-        return sendUserAction(userId, eventId, actionType, timestamp);
+        return sendUserAction(userId, eventId, actionType, createTimestamp());
     }
 
     public boolean sendViewAction(Long userId, Long eventId) {
@@ -66,5 +75,13 @@ public class CollectorGrpcClient {
 
     public boolean sendRegisterAction(Long userId, Long eventId) {
         return sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
+    }
+
+    private Timestamp createTimestamp() {
+        Instant now = Instant.now();
+        return Timestamp.newBuilder()
+                .setSeconds(now.getEpochSecond())
+                .setNanos(now.getNano())
+                .build();
     }
 }
