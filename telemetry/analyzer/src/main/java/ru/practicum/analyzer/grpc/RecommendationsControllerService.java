@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.analyzer.service.RecommendationService;
-import ru.practicum.ewm.stats.proto.*;
+import ru.practicum.stats.service.dashboard.RecommendationsProto;
+import ru.practicum.stats.service.dashboard.RecommendationsControllerGrpc;
 
 import java.util.List;
 import java.util.Map;
@@ -19,10 +20,18 @@ public class RecommendationsControllerService extends RecommendationsControllerG
 
     @Override
     public void getRecommendationsForUser(
-            UserPredictionsRequestProto request,
-            StreamObserver<RecommendedEventProto> responseObserver) {
+            RecommendationsProto.UserPredictionsRequestProto request,
+            StreamObserver<RecommendationsProto.RecommendedEventProto> responseObserver) {
 
         try {
+            if (request == null) {
+                log.error("Получен null запрос");
+                responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
+                        .withDescription("Request cannot be null")
+                        .asRuntimeException());
+                return;
+            }
+
             long userId = request.getUserId();
             int maxResults = request.getMaxResults() > 0 ? request.getMaxResults() : 10;
 
@@ -31,11 +40,18 @@ public class RecommendationsControllerService extends RecommendationsControllerG
             List<Map.Entry<Long, Double>> recommendations =
                     recommendationService.getRecommendationsForUser(userId, maxResults);
 
+            if (recommendations == null || recommendations.isEmpty()) {
+                log.info("Нет рекомендаций для пользователя {}", userId);
+                responseObserver.onCompleted();
+                return;
+            }
+
             for (Map.Entry<Long, Double> entry : recommendations) {
-                RecommendedEventProto response = RecommendedEventProto.newBuilder()
-                        .setEventId(entry.getKey())
-                        .setScore(entry.getValue().floatValue())
-                        .build();
+                RecommendationsProto.RecommendedEventProto response =
+                        RecommendationsProto.RecommendedEventProto.newBuilder()
+                                .setEventId(entry.getKey())
+                                .setScore(entry.getValue().floatValue())
+                                .build();
                 responseObserver.onNext(response);
             }
 
@@ -52,10 +68,18 @@ public class RecommendationsControllerService extends RecommendationsControllerG
 
     @Override
     public void getSimilarEvents(
-            SimilarEventsRequestProto request,
-            StreamObserver<RecommendedEventProto> responseObserver) {
+            RecommendationsProto.SimilarEventsRequestProto request,
+            StreamObserver<RecommendationsProto.RecommendedEventProto> responseObserver) {
 
         try {
+            if (request == null) {
+                log.error("Получен null запрос");
+                responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
+                        .withDescription("Request cannot be null")
+                        .asRuntimeException());
+                return;
+            }
+
             long eventId = request.getEventId();
             long userId = request.getUserId();
             int maxResults = request.getMaxResults() > 0 ? request.getMaxResults() : 10;
@@ -66,11 +90,18 @@ public class RecommendationsControllerService extends RecommendationsControllerG
             List<Map.Entry<Long, Double>> similarEvents =
                     recommendationService.getSimilarEvents(eventId, userId, maxResults);
 
+            if (similarEvents == null || similarEvents.isEmpty()) {
+                log.info("Нет похожих мероприятий для события {}", eventId);
+                responseObserver.onCompleted();
+                return;
+            }
+
             for (Map.Entry<Long, Double> entry : similarEvents) {
-                RecommendedEventProto response = RecommendedEventProto.newBuilder()
-                        .setEventId(entry.getKey())
-                        .setScore(entry.getValue().floatValue())
-                        .build();
+                RecommendationsProto.RecommendedEventProto response =
+                        RecommendationsProto.RecommendedEventProto.newBuilder()
+                                .setEventId(entry.getKey())
+                                .setScore(entry.getValue().floatValue())
+                                .build();
                 responseObserver.onNext(response);
             }
 
@@ -87,21 +118,37 @@ public class RecommendationsControllerService extends RecommendationsControllerG
 
     @Override
     public void getInteractionsCount(
-            InteractionsCountRequestProto request,
-            StreamObserver<RecommendedEventProto> responseObserver) {
+            RecommendationsProto.InteractionsCountRequestProto request,
+            StreamObserver<RecommendationsProto.RecommendedEventProto> responseObserver) {
 
         try {
-            List<Long> eventIds = request.getEventIdsList();
+            if (request == null) {
+                log.error("Получен null запрос");
+                responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
+                        .withDescription("Request cannot be null")
+                        .asRuntimeException());
+                return;
+            }
 
-            log.info("Запрос количества взаимодействий для {} мероприятий", eventIds.size());
+            List<Long> eventIds = request.getEventIdList();
+
+            log.info("Запрос количества взаимодействий для {} мероприятий",
+                    eventIds != null ? eventIds.size() : 0);
 
             Map<Long, Long> interactions = recommendationService.getInteractionsCount(eventIds);
 
+            if (interactions == null || interactions.isEmpty()) {
+                log.info("Нет данных о взаимодействиях");
+                responseObserver.onCompleted();
+                return;
+            }
+
             for (Map.Entry<Long, Long> entry : interactions.entrySet()) {
-                RecommendedEventProto response = RecommendedEventProto.newBuilder()
-                        .setEventId(entry.getKey())
-                        .setScore(entry.getValue().floatValue())
-                        .build();
+                RecommendationsProto.RecommendedEventProto response =
+                        RecommendationsProto.RecommendedEventProto.newBuilder()
+                                .setEventId(entry.getKey())
+                                .setScore(entry.getValue().floatValue())
+                                .build();
                 responseObserver.onNext(response);
             }
 
