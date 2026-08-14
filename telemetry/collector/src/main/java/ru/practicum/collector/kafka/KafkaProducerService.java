@@ -15,19 +15,24 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class KafkaProducerService {
 
-    private final KafkaTemplate<String, UserActionAvro> kafkaTemplate;
+    private final KafkaTemplate<Long, UserActionAvro> kafkaTemplate;
 
-    @Value("${kafka.topics.user-actions}")
+    @Value("${kafka.topics.user-actions:stats.user-actions.v1}")
     private String userActionsTopic;
 
     public void sendUserAction(UserActionAvro action) {
         try {
-            String key = String.valueOf(action.getUserId());
+            if (action == null) {
+                log.warn("Попытка отправить null действие");
+                return;
+            }
 
-            log.info("Отправка действия в Kafka: topic={}, userId={}, eventId={}, actionType={}",
-                    userActionsTopic, action.getUserId(), action.getEventId(), action.getActionType());
+            Long key = action.getUserId();
 
-            CompletableFuture<SendResult<String, UserActionAvro>> future =
+            log.info("Отправка действия в Kafka: topic={}, userId={}, eventId={}, actionType={}, key={}",
+                    userActionsTopic, action.getUserId(), action.getEventId(), action.getActionType(), key);
+
+            CompletableFuture<SendResult<Long, UserActionAvro>> future =
                     kafkaTemplate.send(userActionsTopic, key, action);
 
             future.whenComplete((result, ex) -> {

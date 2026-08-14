@@ -15,7 +15,14 @@ public class ErrorHandler {
         log.error("Ошибка валидации: {}", e.getMessage());
         return Status.INVALID_ARGUMENT
                 .withDescription(e.getMessage())
+                .withCause(e)
                 .asRuntimeException();
+    }
+
+    @GrpcExceptionHandler(io.grpc.StatusRuntimeException.class)
+    public StatusRuntimeException handleStatusRuntimeException(io.grpc.StatusRuntimeException e) {
+        log.error("gRPC ошибка: {}", e.getMessage());
+        return e;
     }
 
     @GrpcExceptionHandler(Exception.class)
@@ -23,6 +30,7 @@ public class ErrorHandler {
         log.error("Внутренняя ошибка: {}", e.getMessage(), e);
         return Status.INTERNAL
                 .withDescription("Внутренняя ошибка сервера")
+                .withCause(e)
                 .asRuntimeException();
     }
 }

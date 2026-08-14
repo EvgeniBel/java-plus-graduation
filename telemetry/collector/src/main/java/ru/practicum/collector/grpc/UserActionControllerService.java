@@ -1,15 +1,15 @@
 package ru.practicum.collector.grpc;
 
-import ru.practicum.ewm.stats.proto.Empty;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.collector.kafka.KafkaProducerService;
 import ru.practicum.collector.mapper.UserActionMapper;
-import ru.practicum.ewm.stats.proto.ActionTypeProto;
-import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
-import ru.practicum.ewm.stats.proto.UserActionProto;
+import ru.practicum.stats.service.collector.UserActionControllerGrpc;
+import ru.practicum.stats.service.collector.UserActionOuterClass;
+
 
 @Slf4j
 @GrpcService
@@ -20,7 +20,9 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
     private final UserActionMapper userActionMapper;
 
     @Override
-    public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
+    @Transactional
+    public void collectUserAction(UserActionOuterClass.UserActionProto request,
+                                  StreamObserver<com.google.protobuf.Empty> responseObserver) {
         try {
             log.info("Получено действие пользователя: userId={}, eventId={}, actionType={}, timestamp={}",
                     request.getUserId(),
@@ -34,7 +36,7 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
 
             kafkaProducerService.sendUserAction(avroAction);
 
-            responseObserver.onNext(Empty.newBuilder().build());
+            responseObserver.onNext(com.google.protobuf.Empty.getDefaultInstance());
             responseObserver.onCompleted();
 
         } catch (IllegalArgumentException e) {
@@ -50,7 +52,7 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
         }
     }
 
-    private void validateRequest(UserActionProto request) {
+    private void validateRequest(UserActionOuterClass.UserActionProto request) {
         if (request.getUserId() <= 0) {
             throw new IllegalArgumentException("userId должен быть положительным числом");
         }
@@ -60,15 +62,12 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
         if (!request.hasTimestamp()) {
             throw new IllegalArgumentException("timestamp обязателен");
         }
-        // Проверка типа действия - теперь ACTION_VIEW = 0
-        if (request.getActionType() == ActionTypeProto.ACTION_VIEW) {
-            // OK
-        } else if (request.getActionType() == ActionTypeProto.ACTION_REGISTER) {
-            // OK
-        } else if (request.getActionType() == ActionTypeProto.ACTION_LIKE) {
 
-        } else {
-            throw new IllegalArgumentException("Некорректный тип действия");
+        UserActionOuterClass.ActionTypeProto actionType = request.getActionType();
+        if (actionType != UserActionOuterClass.ActionTypeProto.ACTION_VIEW &&
+                actionType != UserActionOuterClass.ActionTypeProto.ACTION_REGISTER &&
+                actionType != UserActionOuterClass.ActionTypeProto.ACTION_LIKE) {
+            throw new IllegalArgumentException("Некорректный тип действия: " + actionType);
         }
     }
 }
