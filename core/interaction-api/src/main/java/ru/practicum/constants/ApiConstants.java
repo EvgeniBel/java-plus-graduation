@@ -14,7 +14,7 @@ public final class ApiConstants {
     public static final String CATEGORY_PREFIX = API_PREFIX + "/categories";
     public static final String COMPILATION_PREFIX = API_PREFIX + "/compilations";
     public static final String EVENTS_PREFIX = API_PREFIX + "/events";
-
+    public static final String RECOMMENDATION_PREFIX = API_PREFIX + "/recommendations";
     // ==================== ПАРАМЕТРЫ ====================
     public static final String USER_ID_HEADER = "X-User-Id";
     public static final String FROM_PARAM = "from";
@@ -69,6 +69,7 @@ public final class ApiConstants {
     public static final String EVENT_REQUESTS_STATUS = EVENT_REQUESTS + "/status";
     public static final String EVENT_CONFIRM_REQUEST = EVENT_BY_ID + "/confirm-request";
     public static final String EVENT_ID_REQUESTS = EVENT_ID_PATH + "/requests";
+    public static final String EVENT_LIKE ="/{eventId}/like";
 
     public static final String EVENT_EXISTS = EVENT_BY_ID + "/exists";
     public static final String EVENT_EXISTS_INTERNAL = EVENTS_INTERNAL + EVENT_ID_PATH + "/exists";

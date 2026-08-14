@@ -14,17 +14,19 @@ import ru.practicum.exception.ValidationException;
 
 import java.util.List;
 
+import static ru.practicum.constants.ApiConstants.*;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/events")
+@RequestMapping(EVENTS_PREFIX)
 @Validated
 public class EventRecommendationController {
 
     private final RecommendationService recommendationService;
     private final EventService eventService;
 
-    @GetMapping("/recommendations")
+    @GetMapping(RECOMMENDATION_PREFIX)
     public List<RecommendedEventDto> getRecommendations(
             @RequestHeader("X-EWM-USER-ID") Long userId,
             @RequestParam(defaultValue = "10") @Positive int maxResults
@@ -36,7 +38,7 @@ public class EventRecommendationController {
         return recommendationService.getRecommendationsForUser(userId, maxResults);
     }
 
-    @PutMapping("/{eventId}/like")
+    @PutMapping(EVENT_LIKE)
     @ResponseStatus(HttpStatus.OK)
     public void likeEvent(
             @PathVariable Long eventId,
