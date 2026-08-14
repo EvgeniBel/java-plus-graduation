@@ -20,15 +20,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-# ===== НАСТРОЙКИ ДЛЯ gRPC КЛИЕНТА =====
-grpc:
-  client:
-    collector:
-      address: 'discovery:///collector'
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: plaintext
-      maxInboundMessageSize: 10485760
 
 eureka:
   client:

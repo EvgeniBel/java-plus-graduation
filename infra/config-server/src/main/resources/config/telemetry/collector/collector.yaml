@@ -4,15 +4,11 @@ spring:
   cloud:
     config:
       enabled: true
-      fail-fast: true
-      retry:
-        max-attempts: 3
-        max-interval: 6000
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: ru.practicum.avro.serializer.AvroSerializer
       acks: all
       retries: 3
@@ -20,6 +16,9 @@ spring:
       compression-type: snappy
       batch-size: 16384
       linger-ms: 10
+      max-in-flight-requests-per-connection: 1
+      delivery-timeout-ms: 120000
+      request-timeout-ms: 30000
 
 server:
   port: 0
@@ -28,31 +27,38 @@ grpc:
   server:
     port: 0
 
+kafka:
+  topics:
+    user-actions: ${KAFKA_USER_ACTIONS_TOPIC:stats.user-actions.v1}
+
 eureka:
   client:
-    enabled: true
-    register-with-eureka: true
-    fetch-registry: true
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER:true}
+    fetch-registry: ${EUREKA_FETCH:true}
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
     instance-id: "${spring.application.name}:${random.value}"
-
-kafka:
-  topics:
-    user-actions: stats.user-actions.v1
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics
+        include: health, info, metrics, prometheus
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 logging:
   level:
     ru.practicum.collector: DEBUG
     org.springframework.kafka: INFO
+    io.grpc: DEBUG

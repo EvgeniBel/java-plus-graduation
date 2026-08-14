@@ -1,65 +1,86 @@
 spring:
   application:
-    name: aggregator
+    name: analyzer
   cloud:
     config:
       enabled: true
-      fail-fast: true
-      retry:
-        max-attempts: 3
-        max-interval: 6000
 
-grpc:
-  client:
-    analyzer-service:
-      address: 'discovery:///analyzer'
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: PLAINTEXT
+  datasource:
+    url: jdbc:postgresql://localhost:5439/analyzer_db
+    username: analyzer_user
+    password: analyzer_password
+    driver-class-name: org.postgresql.Driver
 
-kafka:
-  bootstrap-servers: localhost:9092
-  consumer:
-    group-id: aggregator-group
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    auto-offset-reset: earliest
-    enable-auto-commit: false
-    max-poll-records: 100
-  producer:
-    key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    acks: all
-    retries: 3
-    enable-idempotence: true
-    batch-size: 16384
-    linger-ms: 10
-  topics:
-    user-actions: stats.user-actions.v1
-    events-similarity: stats.events-similarity.v1
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: analyzer-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        specific.avro.reader: true
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+      missing-topics-fatal: false
 
 server:
   port: 0
 
+grpc:
+  server:
+    port: 0
+
+kafka:
+  topics:
+    user-actions: stats.user-actions.v1
+    events-similarity: stats.events-similarity.v1
+
+# ===== НАСТРОЙКИ ДЛЯ КОНСЮМЕРОВ =====
+kafka-consumer:
+  user-actions:
+    key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+    group-id: analyzer-group-user-actions
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+    max-poll-records: 1
+
+  events-similarity:
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+    group-id: analyzer-group-similarity
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+    max-poll-records: 1000
+
 eureka:
   client:
-    enabled: true
-    register-with-eureka: true
-    fetch-registry: true
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER:true}
+    fetch-registry: ${EUREKA_FETCH:true}
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
-    instance-id: "${spring.application.name}:${random.value}"
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, metrics
-  endpoint:
-    health:
-      show-details: always
+    instance-id: "${spring.application.name}:${server.port}"
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+    hostname: localhost
 
 logging:
   level:
-    ru.practicum.aggregator: DEBUG
-    org.springframework.kafka: INFO
+    ru.practicum.analyzer: DEBUG
+    org.springframework.kafka: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
