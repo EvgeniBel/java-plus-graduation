@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.analyzer.service.RecommendationService;
-import ru.practicum.stats.service.dashboard.RecommendationsProto;
 import ru.practicum.stats.service.dashboard.RecommendationsControllerGrpc;
+import ru.practicum.stats.service.dashboard.RecommendationsProto;
 
 import java.util.List;
 import java.util.Map;
@@ -135,7 +135,8 @@ public class RecommendationsControllerService extends RecommendationsControllerG
             log.info("Запрос количества взаимодействий для {} мероприятий",
                     eventIds != null ? eventIds.size() : 0);
 
-            Map<Long, Long> interactions = recommendationService.getInteractionsCount(eventIds);
+            // Используем исправленный метод, который возвращает Double
+            Map<Long, Double> interactions = recommendationService.getInteractionsCount(eventIds);
 
             if (interactions == null || interactions.isEmpty()) {
                 log.info("Нет данных о взаимодействиях");
@@ -143,7 +144,7 @@ public class RecommendationsControllerService extends RecommendationsControllerG
                 return;
             }
 
-            for (Map.Entry<Long, Long> entry : interactions.entrySet()) {
+            for (Map.Entry<Long, Double> entry : interactions.entrySet()) {
                 RecommendationsProto.RecommendedEventProto response =
                         RecommendationsProto.RecommendedEventProto.newBuilder()
                                 .setEventId(entry.getKey())

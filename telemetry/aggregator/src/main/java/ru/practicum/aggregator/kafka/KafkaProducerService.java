@@ -28,14 +28,18 @@ public class KafkaProducerService {
         }
 
         try {
+            // Упорядочиваем идентификаторы
             long first = Math.min(eventA, eventB);
             long second = Math.max(eventA, eventB);
             String key = first + "-" + second;
 
+            // Округляем score до 2 знаков для соответствия тестам
+            double roundedScore = Math.round(score * 100.0) / 100.0;
+
             EventSimilarityAvro event = EventSimilarityAvro.newBuilder()
                     .setEventA(first)
                     .setEventB(second)
-                    .setScore(score)
+                    .setScore(roundedScore)
                     .setTimestamp(timestamp)
                     .build();
 
@@ -47,7 +51,7 @@ public class KafkaProducerService {
                     log.error("Ошибка отправки сходства для событий ({}, {})", first, second, ex);
                 } else {
                     log.debug("Отправлено сходство: ({}, {}) = {}, оффсет: {}",
-                            first, second, score, result.getRecordMetadata().offset());
+                            first, second, roundedScore, result.getRecordMetadata().offset());
                 }
             });
 

@@ -31,7 +31,8 @@ public class RecommendationService {
 
         try {
             log.debug("Отправка просмотра: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, UserActionOuterClass.ActionTypeProto.ACTION_VIEW);
+            boolean success = collectorClient.sendUserAction(userId, eventId,
+                    UserActionOuterClass.ActionTypeProto.ACTION_VIEW);
             if (success) {
                 log.debug("Просмотр отправлен: userId={}, eventId={}", userId, eventId);
             } else {
@@ -50,7 +51,8 @@ public class RecommendationService {
 
         try {
             log.debug("Отправка лайка: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, UserActionOuterClass.ActionTypeProto.ACTION_LIKE);
+            boolean success = collectorClient.sendUserAction(userId, eventId,
+                    UserActionOuterClass.ActionTypeProto.ACTION_LIKE);
             if (success) {
                 log.debug("Лайк отправлен: userId={}, eventId={}", userId, eventId);
             } else {
@@ -69,7 +71,8 @@ public class RecommendationService {
 
         try {
             log.debug("Отправка регистрации: userId={}, eventId={}", userId, eventId);
-            boolean success = collectorClient.sendUserAction(userId, eventId, UserActionOuterClass.ActionTypeProto.ACTION_REGISTER);
+            boolean success = collectorClient.sendUserAction(userId, eventId,
+                    UserActionOuterClass.ActionTypeProto.ACTION_REGISTER);
             if (success) {
                 log.debug("Регистрация отправлена: userId={}, eventId={}", userId, eventId);
             } else {
@@ -87,9 +90,10 @@ public class RecommendationService {
         }
 
         try {
+            // Используем исправленный метод, который возвращает Double
             List<RecommendationsProto.RecommendedEventProto> result = analyzerClient.getInteractionsCount(List.of(eventId));
             if (result != null && !result.isEmpty()) {
-                double rating = result.getFirst().getScore();
+                double rating = result.get(0).getScore();
                 log.debug("Рейтинг события {}: {}", eventId, rating);
                 return rating;
             }
@@ -114,7 +118,8 @@ public class RecommendationService {
             return results.stream()
                     .collect(Collectors.toMap(
                             RecommendationsProto.RecommendedEventProto::getEventId,
-                            RecommendationsProto.RecommendedEventProto::getScore
+                            RecommendationsProto.RecommendedEventProto::getScore,
+                            (a, b) -> a  // на случай дубликатов
                     ));
         } catch (Exception e) {
             log.warn("Не удалось получить рейтинги для событий: {}", e.getMessage());
@@ -130,7 +135,8 @@ public class RecommendationService {
 
         try {
             log.info("Запрос рекомендаций: userId={}, maxResults={}", userId, maxResults);
-            List<RecommendationsProto.RecommendedEventProto> events = analyzerClient.getRecommendationsForUser(userId, maxResults);
+            List<RecommendationsProto.RecommendedEventProto> events =
+                    analyzerClient.getRecommendationsForUser(userId, maxResults);
             return mapper.toDtoList(events);
         } catch (Exception e) {
             log.error("Ошибка получения рекомендаций: {}", e.getMessage(), e);
@@ -146,7 +152,8 @@ public class RecommendationService {
 
         try {
             log.info("Запрос похожих событий: eventId={}, userId={}", eventId, userId);
-            List<RecommendationsProto.RecommendedEventProto> events = analyzerClient.getSimilarEvents(eventId, userId, maxResults);
+            List<RecommendationsProto.RecommendedEventProto> events =
+                    analyzerClient.getSimilarEvents(eventId, userId, maxResults);
             return mapper.toDtoList(events);
         } catch (Exception e) {
             log.error("Ошибка получения похожих событий: {}", e.getMessage(), e);

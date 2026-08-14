@@ -38,6 +38,19 @@ public class EventRecommendationController {
         return recommendationService.getRecommendationsForUser(userId, maxResults);
     }
 
+    @GetMapping("/{eventId}/similar")
+    public List<RecommendedEventDto> getSimilarEvents(
+            @PathVariable Long eventId,
+            @RequestHeader(value = "X-EWM-USER-ID", required = false) Long userId,
+            @RequestParam(defaultValue = "10") @Positive int maxResults
+    ) {
+        if (eventId == null || eventId <= 0) {
+            throw new ValidationException("Невалидный eventId: " + eventId);
+        }
+        log.info("Запрос похожих событий: eventId={}, userId={}, maxResults={}", eventId, userId, maxResults);
+        return recommendationService.getSimilarEvents(eventId, userId, maxResults);
+    }
+
     @PutMapping(EVENT_LIKE)
     @ResponseStatus(HttpStatus.OK)
     public void likeEvent(

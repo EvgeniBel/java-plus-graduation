@@ -1,5 +1,6 @@
 package ru.practicum.analyzer.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,15 @@ public interface UserActionRepository extends JpaRepository<UserAction, Long> {
     @Query("SELECT ua.eventId FROM UserAction ua WHERE ua.userId = :userId")
     List<Long> findEventIdsByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT COALESCE(SUM(ua.weight), 0) FROM UserAction ua WHERE ua.eventId = :eventId")
-    Long sumWeightByEventId(@Param("eventId") Long eventId);
+    // Получение последних действий пользователя
+    @Query("SELECT ua FROM UserAction ua WHERE ua.userId = :userId ORDER BY ua.timestamp DESC")
+    List<UserAction> findLastUserActions(@Param("userId") Long userId, Pageable pageable);
+
+    // Сумма максимальных весов для каждого пользователя (исправлено)
+    @Query(value = "SELECT COALESCE(SUM(max_weight), 0) FROM (SELECT MAX(weight) as max_weight FROM user_actions WHERE event_id = :eventId GROUP BY user_id) sub", nativeQuery = true)
+    Long sumMaxWeightsByEventId(@Param("eventId") Long eventId);
+
+    // Получение всех действий по мероприятию с их весами
+    @Query("SELECT ua FROM UserAction ua WHERE ua.eventId = :eventId")
+    List<UserAction> findByEventId(@Param("eventId") Long eventId);
 }
