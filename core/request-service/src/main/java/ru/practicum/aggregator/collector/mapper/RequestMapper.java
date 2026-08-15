@@ -1,9 +1,9 @@
 package ru.practicum.aggregator.collector.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.aggregator.model.ParticipationRequest;
 import ru.practicum.constants.Constants;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.aggregator.model.ParticipationRequest;
 import ru.practicum.dto.request.RequestStatus;
 
 import java.time.LocalDateTime;

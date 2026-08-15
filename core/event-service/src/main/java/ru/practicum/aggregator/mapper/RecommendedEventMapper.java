@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import ru.practicum.dto.event.RecommendedEventDto;
 import ru.practicum.stats.service.dashboard.RecommendationsProto;
 
+
 import java.util.List;
 import java.util.stream.Collectors;
 

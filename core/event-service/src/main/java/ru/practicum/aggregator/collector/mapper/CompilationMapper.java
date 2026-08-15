@@ -1,12 +1,12 @@
 package ru.practicum.aggregator.collector.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.aggregator.model.Compilation;
-import ru.practicum.aggregator.model.Event;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CreateCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationDto;
 import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.aggregator.model.Compilation;
+import ru.practicum.aggregator.model.Event;
 
 import java.util.ArrayList;
 import java.util.List;

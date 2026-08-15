@@ -1,9 +1,9 @@
 package ru.practicum.aggregator.collector.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.aggregator.model.Category;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryRequest;
+import ru.practicum.aggregator.model.Category;
 
 
 @UtilityClass

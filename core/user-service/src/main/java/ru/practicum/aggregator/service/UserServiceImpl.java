@@ -6,14 +6,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.aggregator.collector.mapper.UserMapper;
-import ru.practicum.aggregator.model.User;
-import ru.practicum.aggregator.repository.UserRepository;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.aggregator.collector.mapper.UserMapper;
+import ru.practicum.aggregator.model.User;
+import ru.practicum.aggregator.repository.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;

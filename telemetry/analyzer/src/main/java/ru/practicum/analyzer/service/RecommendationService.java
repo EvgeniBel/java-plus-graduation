@@ -2,10 +2,13 @@ package ru.practicum.analyzer.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.analyzer.model.EventSimilarity;
+import ru.practicum.analyzer.model.UserAction;
 import ru.practicum.analyzer.repository.EventSimilarityRepository;
 import ru.practicum.analyzer.repository.UserActionRepository;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,13 +18,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationService {
 
+    private final UserActionRepository userRepository;
+    private final EventSimilarityRepository similarityRepository;
+
     private static final double VIEW_WEIGHT = 0.4;
     private static final double REGISTER_WEIGHT = 0.8;
     private static final double LIKE_WEIGHT = 1.0;
+
     private static final int DEFAULT_MAX_RESULTS = 10;
     private static final int DEFAULT_K_NEIGHBORS = 5;
-    private final UserActionRepository userRepository;
-    private final EventSimilarityRepository similarityRepository;
 
     /**
      * Получение рекомендаций для пользователя

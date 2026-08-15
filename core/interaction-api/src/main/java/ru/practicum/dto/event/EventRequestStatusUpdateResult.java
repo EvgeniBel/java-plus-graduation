@@ -3,6 +3,7 @@ package ru.practicum.dto.event;
 import lombok.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 
+
 import java.util.List;
 
 @Value

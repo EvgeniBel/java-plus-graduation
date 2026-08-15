@@ -2,9 +2,9 @@ package ru.practicum.aggregator.repository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import ru.practicum.aggregator.model.Event;
 import ru.practicum.dto.event.AdminEventRequestParam;
 import ru.practicum.dto.event.PublicEventRequestParam;
+import ru.practicum.aggregator.model.Event;
 
 import java.util.List;
 
