@@ -2,6 +2,9 @@ server:
   port: 0
 
 spring:
+  application:
+    name: user-service
+
   sql:
     init:
       mode: always
@@ -21,6 +24,17 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
 eureka:
   client:
     enabled: true
@@ -31,3 +45,5 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: "${spring.application.name}:${random.value}"
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
