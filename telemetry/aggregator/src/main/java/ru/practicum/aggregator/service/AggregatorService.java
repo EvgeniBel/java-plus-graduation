@@ -19,13 +19,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AggregatorService {
 
     private static final double EPS = 1e-9;
-    private final KafkaProducerService producer;
-
     // Веса ДОЛЖНЫ совпадать с тестером
     private static final double VIEW_WEIGHT = 0.4;
     private static final double REGISTER_WEIGHT = 0.8;
     private static final double LIKE_WEIGHT = 1.0;
-
+    private final KafkaProducerService producer;
     // eventId -> (userId -> weight)
     private final Map<Long, Map<Long, Double>> eventUserWeights = new ConcurrentHashMap<>();
 

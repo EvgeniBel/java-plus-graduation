@@ -1,10 +1,10 @@
 package ru.practicum.aggregator.collector.mapper;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.aggregator.model.User;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
-import ru.practicum.aggregator.model.User;
 
 
 @UtilityClass

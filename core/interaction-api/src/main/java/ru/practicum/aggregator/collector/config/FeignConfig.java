@@ -2,6 +2,7 @@ package ru.practicum.aggregator.collector.config;
 
 import feign.*;
 import feign.codec.ErrorDecoder;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -10,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.concurrent.TimeUnit;
 
 import static ru.practicum.constants.ApiConstants.USER_ID_HEADER;

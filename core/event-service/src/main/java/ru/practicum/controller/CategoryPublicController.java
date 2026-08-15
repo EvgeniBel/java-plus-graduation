@@ -3,8 +3,8 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.aggregator.service.CategoryService;
+import ru.practicum.dto.category.CategoryDto;
 
 import java.util.List;
 

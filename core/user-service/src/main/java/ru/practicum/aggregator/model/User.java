@@ -24,4 +24,4 @@ public class User {
 
     @Column(name = "name", nullable = false, length = 250)
     String name;
-    }
+}

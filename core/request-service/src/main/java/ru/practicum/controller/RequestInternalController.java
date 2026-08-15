@@ -3,8 +3,8 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.aggregator.service.RequestService;
+import ru.practicum.dto.request.ParticipationRequestDto;
 
 import static ru.practicum.constants.ApiConstants.REQUESTS_INTERNAL;
 import static ru.practicum.constants.ApiConstants.REQUEST_ID_PATH;

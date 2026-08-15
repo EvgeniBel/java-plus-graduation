@@ -3,13 +3,13 @@ package ru.practicum.aggregator.collector.mapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.aggregator.model.Comment;
+import ru.practicum.aggregator.model.CommentStatus;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.user.UserShortDto;
-import ru.practicum.aggregator.model.Comment;
-import ru.practicum.aggregator.model.CommentStatus;
 
 import java.time.LocalDateTime;
 

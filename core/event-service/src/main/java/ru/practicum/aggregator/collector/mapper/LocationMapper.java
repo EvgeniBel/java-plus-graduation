@@ -1,8 +1,8 @@
 package ru.practicum.aggregator.collector.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.dto.event.LocationDto;
 import ru.practicum.aggregator.model.Location;
+import ru.practicum.dto.event.LocationDto;
 
 @UtilityClass
 public class LocationMapper {

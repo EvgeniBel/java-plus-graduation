@@ -6,11 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import ru.practicum.aggregator.model.Event;
+import ru.practicum.aggregator.model.QEvent;
 import ru.practicum.constants.Constants;
 import ru.practicum.dto.event.AdminEventRequestParam;
 import ru.practicum.dto.event.PublicEventRequestParam;
-import ru.practicum.aggregator.model.Event;
-import ru.practicum.aggregator.model.QEvent;
 
 import java.time.LocalDateTime;
 import java.util.List;

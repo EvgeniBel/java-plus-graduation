@@ -33,7 +33,6 @@ public class KafkaConsumerService {
                         @Header(KafkaHeaders.RECEIVED_KEY) Long key,
                         Acknowledgment ack) {
         try {
-            // Используем ваш существующий десериализатор
             UserActionAvro action = deserializer.deserialize(topic, data);
 
             log.info("Получено действие: userId={}, eventId={}, type={}, key={}",
