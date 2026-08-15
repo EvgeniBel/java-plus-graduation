@@ -11,8 +11,6 @@ import ru.practicum.analyzer.util.ActionTypeUtils;
 import ru.practicum.avro.deserializer.UserActionDeserializer;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
-import java.io.IOException;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,24 +26,25 @@ public class UserActionsConsumerService {
     @Transactional
     public void consume(Long key, byte[] data) {
         try {
-            // Десериализуем Avro из байтов
             UserActionAvro action = deserializer.deserialize("stats.user-actions.v1", data);
 
             log.info("Получено действие: key={}, userId={}, eventId={}, type={}",
                     key, action.getUserId(), action.getEventId(), action.getActionType());
 
-            int newWeight = ActionTypeUtils.getWeight(action.getActionType());
+            double newWeight = ActionTypeUtils.getWeight(action.getActionType());
 
             UserAction entity = repository
                     .findByUserIdAndEventId(action.getUserId(), action.getEventId())
                     .map(existing -> {
-                        if (newWeight > existing.getWeight()) {
+                        // Сравниваем как Double
+                        double existingWeight = existing.getWeight();
+                        if (newWeight > existingWeight + 1e-9) {
                             existing.setActionType(action.getActionType());
-                            existing.setWeight(newWeight);
+                            existing.setWeight(newWeight);  // теперь Double
                             existing.setTimestamp(action.getTimestamp());
                             log.info("Обновлено: userId={}, eventId={}, weight={}->{}",
                                     action.getUserId(), action.getEventId(),
-                                    existing.getWeight(), newWeight);
+                                    existingWeight, newWeight);
                         }
                         return existing;
                     })
@@ -53,7 +52,7 @@ public class UserActionsConsumerService {
                             .userId(action.getUserId())
                             .eventId(action.getEventId())
                             .actionType(action.getActionType())
-                            .weight(newWeight)
+                            .weight(newWeight)  // теперь Double
                             .timestamp(action.getTimestamp())
                             .build());
 

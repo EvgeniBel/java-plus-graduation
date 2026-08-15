@@ -38,7 +38,7 @@ public class UserAction {
     private ActionTypeAvro actionType;
 
     @Column(name = "weight", nullable = false)
-    private Integer weight;
+    private Double weight;
 
     @Column(name = "timestamp", nullable = false)
     private Long timestamp;

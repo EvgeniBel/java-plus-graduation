@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.aggregator.kafka.KafkaProducerService;
 import ru.practicum.aggregator.model.UserActionEvent;
-import ru.practicum.aggregator.util.ActionTypeUtils;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,10 +21,15 @@ public class AggregatorService {
     private static final double EPS = 1e-9;
     private final KafkaProducerService producer;
 
-    // eventId -> (userId -> weight) - ИСПРАВЛЕНО!
-    private final Map<Long, Map<Long, Integer>> eventUserWeights = new ConcurrentHashMap<>();
+    // Веса ДОЛЖНЫ совпадать с тестером
+    private static final double VIEW_WEIGHT = 0.4;
+    private static final double REGISTER_WEIGHT = 0.8;
+    private static final double LIKE_WEIGHT = 1.0;
 
-    // eventId -> totalWeight (сумма весов всех пользователей для мероприятия)
+    // eventId -> (userId -> weight)
+    private final Map<Long, Map<Long, Double>> eventUserWeights = new ConcurrentHashMap<>();
+
+    // eventId -> totalWeight (СУММА ВЕСОВ, а не квадратов!) - как в тестере
     private final Map<Long, Double> eventTotal = new ConcurrentHashMap<>();
 
     // eventA -> (eventB -> S_min) - сумма минимальных весов для пары
@@ -40,13 +47,13 @@ public class AggregatorService {
 
         Long userId = action.getUserId();
         Long eventId = action.getEventId();
-        int newWeight = ActionTypeUtils.getWeight(action.getActionType());
+        double newWeight = getWeight(action.getActionType());
 
         // Получаем текущий вес пользователя для этого мероприятия
-        int oldWeight = getWeight(eventId, userId);
+        double oldWeight = getWeight(eventId, userId);
 
         // Если вес не изменился - пропускаем
-        if (newWeight <= oldWeight) {
+        if (newWeight <= oldWeight + EPS) {
             log.debug("Вес не изменился: user={}, event={}, old={}, new={}",
                     userId, eventId, oldWeight, newWeight);
             skippedEvents.incrementAndGet();
@@ -54,17 +61,16 @@ public class AggregatorService {
         }
 
         // 1. Обновляем вес пользователя для мероприятия
-        Map<Long, Integer> userWeights = eventUserWeights.computeIfAbsent(eventId,
+        Map<Long, Double> userWeights = eventUserWeights.computeIfAbsent(eventId,
                 k -> new ConcurrentHashMap<>());
 
-        // Если пользователь уже был в мапе, обновляем вес
-        Integer previousWeight = userWeights.get(userId);
+        Double previousWeight = userWeights.get(userId);
         if (previousWeight != null) {
-            // Обновляем общую сумму (вычитаем старый вес, добавляем новый)
-            eventTotal.merge(eventId, (double) (newWeight - previousWeight), Double::sum);
+            // Обновляем сумму весов (не квадратов!) - как в тестере
+            eventTotal.merge(eventId, newWeight - previousWeight, Double::sum);
         } else {
             // Новый пользователь - добавляем вес
-            eventTotal.merge(eventId, (double) newWeight, Double::sum);
+            eventTotal.merge(eventId, newWeight, Double::sum);
         }
 
         // Сохраняем новый вес
@@ -78,26 +84,35 @@ public class AggregatorService {
                 userId, eventId, newWeight);
     }
 
-    private int getWeight(Long eventId, Long userId) {
-        Map<Long, Integer> weights = eventUserWeights.get(eventId);
-        return weights == null ? 0 : weights.getOrDefault(userId, 0);
+    private double getWeight(Long eventId, Long userId) {
+        Map<Long, Double> weights = eventUserWeights.get(eventId);
+        return weights == null ? 0.0 : weights.getOrDefault(userId, 0.0);
     }
 
-    private void recalculateSimilarities(Long eventId, Long userId, int oldWeight, int newWeight, Long timestamp) {
+    private double getWeight(ActionTypeAvro type) {
+        return switch (type) {
+            case VIEW -> VIEW_WEIGHT;
+            case REGISTER -> REGISTER_WEIGHT;
+            case LIKE -> LIKE_WEIGHT;
+            default -> 0.0;
+        };
+    }
+
+    private void recalculateSimilarities(Long eventId, Long userId, double oldWeight, double newWeight, Long timestamp) {
         // Получаем все мероприятия, с которыми взаимодействовал пользователь
-        Map<Long, Integer> userEvents = getUserEvents(userId);
+        Map<Long, Double> userEvents = getUserEvents(userId);
         if (userEvents == null || userEvents.isEmpty()) {
             return;
         }
 
         int updatedCount = 0;
-        for (Map.Entry<Long, Integer> entry : userEvents.entrySet()) {
+        for (Map.Entry<Long, Double> entry : userEvents.entrySet()) {
             Long otherEventId = entry.getKey();
             if (otherEventId.equals(eventId)) {
                 continue;
             }
 
-            int otherWeight = entry.getValue();
+            double otherWeight = entry.getValue();
 
             // Обновляем S_min для пары (eventId, otherEventId)
             updateMinSum(eventId, otherEventId, oldWeight, newWeight, otherWeight);
@@ -105,12 +120,14 @@ public class AggregatorService {
             // Вычисляем новое сходство
             double similarity = calcSimilarity(eventId, otherEventId);
             if (similarity > EPS && similarity <= 1.0) {
-                producer.sendSimilarity(eventId, otherEventId, similarity, timestamp);
+                // Округляем до 2 знаков как в тестере
+                double rounded = Math.round(similarity * 100.0) / 100.0;
+                producer.sendSimilarity(eventId, otherEventId, rounded, timestamp);
                 updatedCount++;
                 log.debug("Отправлено сходство: eventA={}, eventB={}, score={}",
                         Math.min(eventId, otherEventId),
                         Math.max(eventId, otherEventId),
-                        similarity);
+                        rounded);
             }
         }
 
@@ -119,34 +136,29 @@ public class AggregatorService {
         }
     }
 
-    private Map<Long, Integer> getUserEvents(Long userId) {
-        Map<Long, Integer> result = new ConcurrentHashMap<>();
-        for (Map.Entry<Long, Map<Long, Integer>> entry : eventUserWeights.entrySet()) {
-            Integer weight = entry.getValue().get(userId);
-            if (weight != null && weight > 0) {
+    private Map<Long, Double> getUserEvents(Long userId) {
+        Map<Long, Double> result = new ConcurrentHashMap<>();
+        for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
+            Double weight = entry.getValue().get(userId);
+            if (weight != null && weight > EPS) {
                 result.put(entry.getKey(), weight);
             }
         }
         return result;
     }
 
-    // ИСПРАВЛЕННЫЙ метод обновления S_min
-    private void updateMinSum(Long a, Long b, int oldW, int newW, int otherW) {
+    private void updateMinSum(Long a, Long b, double oldW, double newW, double otherW) {
         long first = Math.min(a, b);
         long second = Math.max(a, b);
 
-        // Старое значение S_min
         double oldMin = Math.min(oldW, otherW);
-        // Новое значение S_min
         double newMin = Math.min(newW, otherW);
-
-        // Разница
         double delta = newMin - oldMin;
+
         if (Math.abs(delta) < EPS) {
             return;
         }
 
-        // Обновляем сумму минимальных весов
         minSums.computeIfAbsent(first, k -> new ConcurrentHashMap<>())
                 .merge(second, delta, Double::sum);
 
@@ -157,7 +169,6 @@ public class AggregatorService {
         long first = Math.min(a, b);
         long second = Math.max(a, b);
 
-        // Получаем S_min
         Map<Long, Double> firstMap = minSums.get(first);
         if (firstMap == null) {
             return 0.0;
@@ -167,7 +178,7 @@ public class AggregatorService {
             return 0.0;
         }
 
-        // Получаем общие суммы весов
+        // Используем СУММУ ВЕСОВ (не квадратов!) - как в тестере
         Double sA = eventTotal.get(a);
         Double sB = eventTotal.get(b);
 
@@ -175,20 +186,34 @@ public class AggregatorService {
             return 0.0;
         }
 
-        // Вычисляем косинусное сходство
         double similarity = sMin / (Math.sqrt(sA) * Math.sqrt(sB));
-
-        // Нормализуем до [0, 1]
         return Math.min(1.0, Math.max(0.0, similarity));
     }
 
-    // Методы для мониторинга и отладки
+    // Метод для получения суммы максимальных весов (для Analyzer)
+    public Map<Long, Double> getInteractionsCount(List<Long> eventIds) {
+        Map<Long, Double> result = new HashMap<>();
+        for (Long eventId : eventIds) {
+            if (eventId != null && eventId > 0) {
+                // Сумма максимальных весов для каждого пользователя
+                double sum = 0.0;
+                Map<Long, Double> weights = eventUserWeights.get(eventId);
+                if (weights != null) {
+                    for (Double w : weights.values()) {
+                        sum += w;
+                    }
+                }
+                result.put(eventId, sum);
+            }
+        }
+        return result;
+    }
+
     public Map<String, Long> getStats() {
         return Map.of(
                 "processedEvents", processedEvents.get(),
                 "skippedEvents", skippedEvents.get(),
                 "eventsTracked", (long) eventUserWeights.size(),
-                "totalEventsWeight", (long) eventTotal.size(),
                 "similarityPairs", minSums.values().stream().mapToLong(Map::size).sum()
         );
     }

@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS user_actions (
     user_id BIGINT NOT NULL,
     event_id BIGINT NOT NULL,
     action_type VARCHAR(20) NOT NULL,
-    weight INTEGER NOT NULL,
+    weight DOUBLE PRECISION NOT NULL,
     timestamp BIGINT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, event_id)
