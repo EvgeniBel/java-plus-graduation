@@ -36,11 +36,10 @@ public class UserActionsConsumerService {
             UserAction entity = repository
                     .findByUserIdAndEventId(action.getUserId(), action.getEventId())
                     .map(existing -> {
-                        // Сравниваем как Double
                         double existingWeight = existing.getWeight();
                         if (newWeight > existingWeight + 1e-9) {
                             existing.setActionType(action.getActionType());
-                            existing.setWeight(newWeight);  // теперь Double
+                            existing.setWeight(newWeight);
                             existing.setTimestamp(action.getTimestamp());
                             log.info("Обновлено: userId={}, eventId={}, weight={}->{}",
                                     action.getUserId(), action.getEventId(),
@@ -52,7 +51,7 @@ public class UserActionsConsumerService {
                             .userId(action.getUserId())
                             .eventId(action.getEventId())
                             .actionType(action.getActionType())
-                            .weight(newWeight)  // теперь Double
+                            .weight(newWeight)
                             .timestamp(action.getTimestamp())
                             .build());
 

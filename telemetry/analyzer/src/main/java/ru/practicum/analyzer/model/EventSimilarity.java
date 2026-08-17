@@ -1,10 +1,8 @@
 package ru.practicum.analyzer.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 
@@ -20,26 +18,27 @@ import java.time.Instant;
                 @Index(name = "idx_event_similarities_event_b", columnList = "event_b"),
                 @Index(name = "idx_event_similarities_score", columnList = "score DESC")
         })
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventSimilarity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "event_a", nullable = false)
-    private Long eventA;
+    Long eventA;
 
     @Column(name = "event_b", nullable = false)
-    private Long eventB;
+    Long eventB;
 
     @Column(name = "score", nullable = false)
-    private Double score;
+    Double score;
 
     @Column(name = "timestamp", nullable = false)
-    private Long timestamp;
+    Long timestamp;
 
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    Instant updatedAt;
 
     @PrePersist
     @PreUpdate

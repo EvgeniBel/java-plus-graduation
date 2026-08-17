@@ -75,14 +75,16 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     @Override
-    public CommentResponseDto patchCommentById(UpdateCommentUserRequest dto) {
-        log.info("Обновление комментария {} пользователем {}", dto.getId(), dto.getUserId());
+    public CommentResponseDto patchCommentById(UpdateCommentUserRequest updateRequest) {
+        log.info("Обновление комментария {} пользователем {}", updateRequest.getId(), updateRequest.getUserId());
 
-        Comment comment = commentRepository.findById(dto.getId())
-                .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID: %s не найден.", dto.getId())));
+        Comment comment = commentRepository.findById(updateRequest.getId())
+                .orElseThrow(() -> new NotFoundException(String.format("Комментарий с ID: %s не найден.", updateRequest.getId())));
 
-        if (!comment.getUserId().equals(dto.getUserId())) {
-            throw new ValidationException("Пользователь не является автором комментария.");
+        if (!comment.getUserId().equals(updateRequest.getUserId())) {
+            throw new ValidationException(String.format(
+                    "Пользователь с ID: %s не является автором комментария с ID: %s.",
+                    updateRequest.getUserId(), updateRequest.getId()));
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -94,7 +96,7 @@ public class CommentServiceImpl implements CommentService {
             throw new ValidationException("Отклоненный комментарий нельзя редактировать.");
         }
 
-        comment.setContent(dto.getContent());
+        comment.setContent(updateRequest.getContent());
         comment.setUpdatedAt(now);
         if (comment.getStatus() == CommentStatus.APPROVED) {
             comment.setStatus(CommentStatus.PENDING);

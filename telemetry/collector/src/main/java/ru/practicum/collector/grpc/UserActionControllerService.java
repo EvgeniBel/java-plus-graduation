@@ -67,7 +67,7 @@ public class UserActionControllerService extends UserActionControllerGrpc.UserAc
         if (actionType != UserActionOuterClass.ActionTypeProto.ACTION_VIEW &&
                 actionType != UserActionOuterClass.ActionTypeProto.ACTION_REGISTER &&
                 actionType != UserActionOuterClass.ActionTypeProto.ACTION_LIKE) {
-            throw new IllegalArgumentException("Некорректный тип действия: " + actionType);
+            throw new IllegalArgumentException(String.format("Некорректный тип действия: %s", actionType));
         }
     }
 }

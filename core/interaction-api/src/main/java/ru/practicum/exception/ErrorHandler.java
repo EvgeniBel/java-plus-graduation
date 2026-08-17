@@ -126,7 +126,7 @@ public class ErrorHandler {
         return ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason("Incorrectly made request.")
-                .message("Missing parameter: " + ex.getParameterName())
+                .message(String.format("Missing parameter: %s", ex.getParameterName()))
                 .build();
     }
 

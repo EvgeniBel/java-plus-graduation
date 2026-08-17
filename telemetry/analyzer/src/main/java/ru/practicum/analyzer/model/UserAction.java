@@ -1,10 +1,8 @@
 package ru.practicum.analyzer.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
 import java.time.Instant;
@@ -21,30 +19,31 @@ import java.time.Instant;
                 @Index(name = "idx_user_actions_event_id", columnList = "event_id"),
                 @Index(name = "idx_user_actions_user_event", columnList = "user_id, event_id")
         })
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserAction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    Long userId;
 
     @Column(name = "event_id", nullable = false)
-    private Long eventId;
+    Long eventId;
 
     @Column(name = "action_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private ActionTypeAvro actionType;
+    ActionTypeAvro actionType;
 
     @Column(name = "weight", nullable = false)
-    private Double weight;
+    Double weight;
 
     @Column(name = "timestamp", nullable = false)
-    private Long timestamp;
+    Long timestamp;
 
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    Instant updatedAt;
 
     @PrePersist
     @PreUpdate

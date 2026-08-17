@@ -1,9 +1,7 @@
 package ru.practicum.aggregator.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
 
@@ -11,11 +9,12 @@ import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserActionEvent {
-    private Long userId;
-    private Long eventId;
-    private ActionTypeAvro actionType;
-    private Long timestamp;
+    Long userId;
+    Long eventId;
+    ActionTypeAvro actionType;
+    Long timestamp;
 
     // метод для валидации
     public boolean isValid() {

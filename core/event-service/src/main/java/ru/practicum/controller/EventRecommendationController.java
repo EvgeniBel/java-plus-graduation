@@ -32,7 +32,7 @@ public class EventRecommendationController {
             @RequestParam(defaultValue = "10") @Positive int maxResults
     ) {
         if (userId == null || userId <= 0) {
-            throw new ValidationException("Невалидный userId: " + userId);
+            throw new ValidationException(String.format("Невалидный userId: %s", userId));
         }
         log.info("Запрос рекомендаций: userId={}, maxResults={}", userId, maxResults);
         return recommendationService.getRecommendationsForUser(userId, maxResults);
@@ -45,7 +45,7 @@ public class EventRecommendationController {
             @RequestParam(defaultValue = "10") @Positive int maxResults
     ) {
         if (eventId == null || eventId <= 0) {
-            throw new ValidationException("Невалидный eventId: " + eventId);
+            throw new ValidationException(String.format("Невалидный eventId: %s", eventId));
         }
         log.info("Запрос похожих событий: eventId={}, userId={}, maxResults={}", eventId, userId, maxResults);
         return recommendationService.getSimilarEvents(eventId, userId, maxResults);
@@ -58,10 +58,10 @@ public class EventRecommendationController {
             @RequestHeader("X-EWM-USER-ID") Long userId
     ) {
         if (userId == null || userId <= 0) {
-            throw new ValidationException("Невалидный userId: " + userId);
+            throw new ValidationException(String.format("Невалидный userId: %s", userId));
         }
         if (eventId == null || eventId <= 0) {
-            throw new ValidationException("Невалидный eventId: " + eventId);
+            throw new ValidationException(String.format("Невалидный eventId: %s", eventId));
         }
 
         log.info("Лайк: userId={}, eventId={}", userId, eventId);
