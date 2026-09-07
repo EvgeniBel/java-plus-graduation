@@ -1,6 +1,4 @@
 services:
-  # ==================== БАЗЫ ДАННЫХ ====================
-
   postgres-stats:
     image: postgres:15
     container_name: postgres-stats
@@ -12,14 +10,14 @@ services:
       - "5434:5432"
     volumes:
       - postgres-stats-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-stats-server"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-stats-server" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-event:
     image: postgres:15
@@ -32,14 +30,14 @@ services:
       - "5435:5432"
     volumes:
       - postgres-event-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-event-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-event-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-comment:
     image: postgres:15
@@ -52,14 +50,14 @@ services:
       - "5436:5432"
     volumes:
       - postgres-comment-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-comment-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-comment-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-request:
     image: postgres:15
@@ -72,14 +70,14 @@ services:
       - "5437:5432"
     volumes:
       - postgres-request-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-request-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-request-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-user:
     image: postgres:15
@@ -92,14 +90,78 @@ services:
       - "5438:5432"
     volumes:
       - postgres-user-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm-user-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
     networks:
       - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ewm -d ewm-user-service" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-analyzer:
+    image: postgres:15
+    container_name: postgres-analyzer
+    environment:
+      POSTGRES_DB: analyzer_db
+      POSTGRES_USER: analyzer_user
+      POSTGRES_PASSWORD: analyzer_password
+    ports:
+      - "5439:5432"
+    volumes:
+      - postgres-analyzer-data:/var/lib/postgresql/data
+      - ./telemetry/analyzer/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
+    networks:
+      - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U analyzer_user -d analyzer_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================
+  # KAFKA в KRaft режиме (БЕЗ Zookeeper)
+  # =============================================
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+      KAFKA_OFFSET_COMMIT_TIMEOUT_MS: 10000
+      KAFKA_OFFSET_COMMIT_REQUIRED_ACKS: -1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    restart: unless-stopped
+    networks:
+      - ewm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
 
 volumes:
   postgres-stats-data:
@@ -107,6 +169,8 @@ volumes:
   postgres-comment-data:
   postgres-request-data:
   postgres-user-data:
+  postgres-analyzer-data:
+  kafka_data:
 
 networks:
   ewm-network:

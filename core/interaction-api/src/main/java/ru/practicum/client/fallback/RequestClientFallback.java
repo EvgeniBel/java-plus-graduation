@@ -66,4 +66,10 @@ public class RequestClientFallback implements RequestClient {
                 .created(LocalDateTime.now().toString())
                 .build();
     }
+
+    @Override
+    public List<ParticipationRequestDto> getRequestsByUser(Long userId) {
+        log.warn("RequestService недоступен при получении запросов пользователя ID: {}, возвращаем пустой список", userId);
+        return new ArrayList<>();
+    }
 }

@@ -47,7 +47,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleMissingParams(MissingServletRequestParameterException ex) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Отсутствует параметр: " + ex.getParameterName());
+        error.put("error", String.format("Отсутствует параметр: %s", ex.getParameterName()));
         return error;
     }
 

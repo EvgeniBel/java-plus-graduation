@@ -31,7 +31,6 @@ class StatClientTest {
 
         final String baseUrl = mockWebServer.url("").toString();
 
-
         UriProvider testUriProvider = path -> URI.create(baseUrl + path);
 
         RestClient restClient = RestClient.builder()
@@ -47,14 +46,8 @@ class StatClientTest {
     }
 
     @Test
-    void testPostHitSuccess() throws InterruptedException {
-        String responseBody = "{\n" +
-                "    \"id\": 1,\n" +
-                "    \"app\": \"test-app\",\n" +
-                "    \"uri\": \"/test\",\n" +
-                "    \"ip\": \"127.0.0.1\",\n" +
-                "    \"timestamp\": \"2024-01-01 12:00:00\"\n" +
-                "}";
+    void testPostHitSuccess() throws Exception {
+        String responseBody = "{\"id\":1,\"app\":\"test-app\",\"uri\":\"/test\",\"ip\":\"127.0.0.1\",\"timestamp\":\"2024-01-01 12:00:00\"}";
 
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -72,6 +65,8 @@ class StatClientTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("test-app", result.getApp());
+        assertEquals("/test", result.getUri());
+        assertEquals("127.0.0.1", result.getIp());
 
         var request = mockWebServer.takeRequest();
         assertEquals("POST", request.getMethod());
@@ -79,11 +74,8 @@ class StatClientTest {
     }
 
     @Test
-    void testGetStatsSuccess() throws InterruptedException {
-        String responseBody = "[\n" +
-                "    {\"app\":\"app1\",\"uri\":\"/test1\",\"hits\":5},\n" +
-                "    {\"app\":\"app1\",\"uri\":\"/test2\",\"hits\":3}\n" +
-                "]";
+    void testGetStatsSuccess() throws Exception {
+        String responseBody = "[{\"app\":\"app1\",\"uri\":\"/test1\",\"hits\":5},{\"app\":\"app1\",\"uri\":\"/test2\",\"hits\":3}]";
 
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -124,5 +116,23 @@ class StatClientTest {
 
         assertNotNull(result);
         assertNull(result.getId());
+    }
+
+    @Test
+    void testGetStatsError() {
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(500)
+                .setBody("Internal Server Error"));
+
+        StatRequestParamDto params = new StatRequestParamDto();
+        params.setStart("2024-01-01 00:00:00");
+        params.setEnd("2024-01-01 23:59:59");
+        params.setUris(Arrays.asList("/test1", "/test2"));
+        params.setUnique(false);
+
+        List<StatResponseDto> results = statClient.getStats(params);
+
+        assertNotNull(results);
+        assertTrue(results.isEmpty());
     }
 }

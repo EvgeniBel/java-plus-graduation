@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.aggregator.service.CommentService;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.comment.UpdateCommentUserRequest;
-import ru.practicum.service.CommentService;
 
 import static ru.practicum.constants.ApiConstants.COMMENTS_BY_USER;
 import static ru.practicum.constants.ApiConstants.COMMENT_ID_PATH;
@@ -59,5 +59,4 @@ public class CommentPrivateController {
                 userId, commentId, eventId);
         commentService.removeCommentById(userId, eventId, commentId);
     }
-
 }

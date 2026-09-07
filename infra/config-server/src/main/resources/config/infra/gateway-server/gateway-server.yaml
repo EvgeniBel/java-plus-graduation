@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: gateway-server
+
   cloud:
     gateway:
       discovery:
@@ -78,6 +81,10 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: "${spring.application.name}:${random.value}"
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 management:
   endpoints:
@@ -90,3 +97,7 @@ management:
       enabled: true
     health:
       show-details: always
+      show-components: always
+  health:
+    discovery:
+      enabled: true

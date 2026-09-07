@@ -12,9 +12,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.aggregator.service.CommentService;
 import ru.practicum.dto.comment.CommentResponseDto;
 import ru.practicum.dto.comment.CommentStatusUpdateRequest;
-import ru.practicum.service.CommentService;
 
 import static ru.practicum.constants.ApiConstants.*;
 

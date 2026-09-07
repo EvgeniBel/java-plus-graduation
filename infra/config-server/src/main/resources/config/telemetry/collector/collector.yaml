@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: collector
+  cloud:
+    config:
+      enabled: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: ru.practicum.avro.serializer.AvroSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+      compression-type: snappy
+      batch-size: 16384
+      linger-ms: 10
+      max-in-flight-requests-per-connection: 1
+      delivery-timeout-ms: 120000
+      request-timeout-ms: 30000
+
+server:
+  port: 0
+
+grpc:
+  server:
+    port: 0
+
+kafka:
+  topics:
+    user-actions: ${KAFKA_USER_ACTIONS_TOPIC:stats.user-actions.v1}
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER:true}
+    fetch-registry: ${EUREKA_FETCH:true}
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: "${spring.application.name}:${random.value}"
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    ru.practicum.collector: DEBUG
+    org.springframework.kafka: INFO
+    io.grpc: DEBUG

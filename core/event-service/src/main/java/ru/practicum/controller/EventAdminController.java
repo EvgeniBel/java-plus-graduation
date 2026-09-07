@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.AdminEventRequestParam;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
-import ru.practicum.service.EventService;
+import ru.practicum.aggregator.service.EventService;
 
 import java.util.List;
 import java.util.stream.Collectors;

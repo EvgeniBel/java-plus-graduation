@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: aggregator
+
+  cloud:
+    config:
+      enabled: true
+      discovery:
+        enabled: true
+        service-id: config-server
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    admin:
+      auto-create: true
+    consumer:
+      group-id: aggregator-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      properties:
+        specific.avro.reader: true
+      max-poll-records: 50
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+      missing-topics-fatal: false
+
+server:
+  port: 0
+
+
+kafka:
+  topics:
+    user-actions: stats.user-actions.v1
+    events-similarity: stats.events-similarity.v1
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER:true}
+    fetch-registry: ${EUREKA_FETCH:true}
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: "${spring.application.name}:${server.port}"
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+    hostname: localhost
+
+logging:
+  level:
+    ru.practicum.aggregator: INFO
+    org.springframework: WARN
+    org.apache: WARN
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN
+    kafka: WARN

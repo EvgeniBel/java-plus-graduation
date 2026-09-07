@@ -15,5 +15,4 @@ public class ConfigServer {
         SpringApplication.run(ConfigServer.class, args);
         log.info("ConfigServer успешно запущен");
     }
-
 }

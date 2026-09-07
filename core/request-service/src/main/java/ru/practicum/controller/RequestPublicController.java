@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.request.ParticipationRequestDto;
-import ru.practicum.service.RequestService;
+import ru.practicum.aggregator.service.RequestService;
 
 import java.util.List;
 

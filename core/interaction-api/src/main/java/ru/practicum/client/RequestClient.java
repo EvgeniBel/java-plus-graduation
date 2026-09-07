@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.client.fallback.RequestClientFallback;
-import ru.practicum.config.FeignConfig;
+import ru.practicum.aggregator.collector.config.FeignConfig;
 import ru.practicum.dto.request.CreateUpdateRequestDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 
@@ -49,4 +49,6 @@ public interface RequestClient {
             @PathVariable(REQUEST_BY_ID_PARAM) Long requestId,
             @RequestParam("status") String status
     );
+    @GetMapping(REQUESTS_BASE)
+    List<ParticipationRequestDto> getRequestsByUser(@PathVariable(USER_BY_ID_PARAM) Long userId);
 }

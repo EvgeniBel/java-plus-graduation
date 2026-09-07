@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryRequest;
-import ru.practicum.service.CategoryService;
+import ru.practicum.aggregator.service.CategoryService;
 
 import static ru.practicum.constants.ApiConstants.CATEGORIES_BASE;
 import static ru.practicum.constants.ApiConstants.CATEGORY_ID;

@@ -4,7 +4,6 @@ import lombok.*;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
 
-
 @Value
 @Builder
 @Getter
@@ -20,6 +19,6 @@ public class EventShortDto {
     UserShortDto initiator;
     Boolean paid;
     String title;
-    Long views;
+    Double rating;
     String state;
 }

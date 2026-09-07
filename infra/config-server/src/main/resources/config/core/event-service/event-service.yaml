@@ -11,10 +11,16 @@ spring:
     url: jdbc:postgresql://localhost:5435/ewm-event-service
     username: ewm
     password: ewm
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -27,13 +33,80 @@ spring:
         max-page-size: 100
         default-page-size: 10
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: ru.practicum.avro.serializer.AvroSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+      compression-type: snappy
+
+# ===== НАСТРОЙКИ ДЛЯ gRPC КЛИЕНТОВ =====
+grpc:
+  server:
+    port: 0
+  client:
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+      maxInboundMessageSize: 10485760
+    analyzer:
+      address: 'discovery:///analyzer'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+      maxInboundMessageSize: 10485760
+
+# ===== KAFKA ТОПИКИ =====
+app:
+  kafka:
+    topics:
+      user-actions: ${KAFKA_USER_ACTIONS_TOPIC:stats.user-actions.v1}
+      events-similarity: ${KAFKA_EVENTS_SIMILARITY_TOPIC:stats.events-similarity.v1}
+
+# ===== НАСТРОЙКИ ДЛЯ HTTP КЛИЕНТА СТАТИСТИКИ =====
+stat:
+  service:
+    id: ${STATS_SERVICE_ID:stats-server}
+
+# ===== EUREKA =====
 eureka:
   client:
-    enabled: true
-    register-with-eureka: true
-    fetch-registry: true
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER:true}
+    fetch-registry: ${EUREKA_FETCH:true}
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
     instance-id: "${spring.application.name}:${random.value}"
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# ===== MANAGEMENT / ACTUATOR =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# ===== ЛОГИРОВАНИЕ =====
+logging:
+  level:
+    ru.practicum: DEBUG
+    ru.practicum.grpc: DEBUG
+    io.grpc: INFO
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
